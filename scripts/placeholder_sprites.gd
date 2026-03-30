@@ -1,31 +1,34 @@
-## Generates a placeholder trainer sprite at runtime.
-## Draws a Pokémon FireRed-proportioned character with clean outlines,
-## shading, and visible detail at 16×16.
+## Loads the player character sprite from ArMM1998 CC0 character.png.
+## Extracts the first character's walk cycle into a 32×128 spritesheet
+## matching our AnimatedSprite2D atlas layout.
 ##
-## Layout: 2 frames wide × 4 directions tall (16×16 each)
-##   Row 0: Down  |  Row 1: Up  |  Row 2: Left  |  Row 3: Right
+## Layout: 2 frames wide × 4 directions tall (16×32 each)
+##   Row 0 (y=0):  Down   |  Row 1 (y=32): Up
+##   Row 2 (y=64): Left   |  Row 3 (y=96): Right
 
 extends Node
 
-const SPRITE_SIZE := 16
+const SPRITE_W := 16
+const SPRITE_H := 32
 
-## Cached texture for reapply after scene changes
+## Source layout in character.png (first character, cols 0-3):
+##   Row 0 (y=0):  Down   |  Row 1 (y=32): Left
+##   Row 2 (y=64): Right  |  Row 3 (y=96): Up
+## We remap to match our animation names.
+const SRC_ROW := {
+	"down":  0,   ## character.png row 0 → our row 0
+	"up":    3,   ## character.png row 3 → our row 1
+	"left":  1,   ## character.png row 1 → our row 2
+	"right": 2,   ## character.png row 2 → our row 3
+}
+const DST_ROW := {
+	"down":  0,
+	"up":    1,
+	"left":  2,
+	"right": 3,
+}
+
 var _tex: ImageTexture = null
-
-## ── Palette ─────────────────────────────────────────────────────────────────
-const OL  := Color(0.06, 0.04, 0.02)   ## Black outline
-const CAP := Color(0.82, 0.14, 0.14)   ## Red cap
-const CPD := Color(0.58, 0.08, 0.08)   ## Cap shadow
-const CPW := Color(0.92, 0.92, 0.88)   ## Cap white stripe
-const SKN := Color(0.94, 0.76, 0.56)   ## Skin
-const SKD := Color(0.78, 0.60, 0.40)   ## Skin shadow
-const EYE := Color(0.08, 0.08, 0.20)   ## Eye
-const HRS := Color(0.18, 0.10, 0.04)   ## Hair (dark brown)
-const SHT := Color(0.12, 0.32, 0.78)   ## Shirt blue
-const SHD := Color(0.08, 0.22, 0.55)   ## Shirt shadow
-const PNT := Color(0.32, 0.30, 0.42)   ## Pants dark gray-blue
-const PND := Color(0.22, 0.20, 0.30)   ## Pants shadow
-const SHO := Color(0.15, 0.10, 0.06)   ## Shoes
 
 
 func _ready() -> void:
@@ -33,221 +36,70 @@ func _ready() -> void:
 
 
 func _generate_player_spritesheet() -> void:
-	var img := Image.create(32, 64, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0, 0, 0, 0))
+	var sheet := Image.create(SPRITE_W * 2, SPRITE_H * 4, false, Image.FORMAT_RGBA8)
+	sheet.fill(Color(0, 0, 0, 0))
 
-	_draw_down(img, 0, 0, false)
-	_draw_down(img, 16, 0, true)
-	_draw_up(img, 0, 16, false)
-	_draw_up(img, 16, 16, true)
-	_draw_side(img, 0, 32, false, false)   ## Left idle
-	_draw_side(img, 16, 32, false, true)   ## Left walk
-	_draw_side(img, 0, 48, true, false)    ## Right idle
-	_draw_side(img, 16, 48, true, true)    ## Right walk
+	var char_img: Image = null
+	var char_path := "res://art/tilesets/armm1998/gfx/character.png"
 
-	_tex = ImageTexture.create_from_image(img)
+	if ResourceLoader.exists(char_path):
+		var char_tex: Texture2D = load(char_path)
+		if char_tex:
+			char_img = char_tex.get_image()
+
+	if char_img == null:
+		char_img = Image.new()
+		var abs_path := ProjectSettings.globalize_path(char_path)
+		if char_img.load(abs_path) != OK:
+			push_warning("PlaceholderSprites: Could not load character.png, using fallback")
+			_generate_fallback(sheet)
+			_tex = ImageTexture.create_from_image(sheet)
+			_apply_to_player(_tex)
+			return
+
+	## Extract 2 frames per direction from the first character
+	for dir_name in ["down", "up", "left", "right"]:
+		var src_row: int = SRC_ROW[dir_name]
+		var dst_row: int = DST_ROW[dir_name]
+		var src_y := src_row * SPRITE_H
+		var dst_y := dst_row * SPRITE_H
+
+		## Frame 0: idle (col 0 in source)
+		_blit(char_img, 0, src_y, sheet, 0, dst_y, SPRITE_W, SPRITE_H)
+		## Frame 1: walk (col 1 in source)
+		_blit(char_img, SPRITE_W, src_y, sheet, SPRITE_W, dst_y, SPRITE_W, SPRITE_H)
+
+	_tex = ImageTexture.create_from_image(sheet)
 	_apply_to_player(_tex)
 
 
-## ── Down-facing frame ───────────────────────────────────────────────────────
-func _draw_down(img: Image, ox: int, oy: int, step: bool) -> void:
-	## Cap (rows 1-3)
-	_hline(img, ox, oy, 5, 10, CAP)     ## top of cap
-	_hline(img, ox, oy, 4, 11, CAP)     ## cap body row 1
-	img.set_pixel(ox + 7, oy + 1, CPW)  ## white stripe
-	img.set_pixel(ox + 8, oy + 1, CPW)
-	_hline(img, ox, oy, 4, 11, CAP, 2)
-	_hline(img, ox, oy, 3, 12, CPD, 3)  ## brim (darker)
-	## Outline top
-	_hline(img, ox, oy, 5, 10, OL, 0)
-	img.set_pixel(ox + 4, oy + 1, OL)
-	img.set_pixel(ox + 11, oy + 1, OL)
-	img.set_pixel(ox + 3, oy + 2, OL)
-	img.set_pixel(ox + 12, oy + 2, OL)
-
-	## Face (rows 4-6)
-	for y in range(4, 7):
-		_hline(img, ox, oy, 4, 11, SKN, y)
-	## Eyes
-	img.set_pixel(ox + 5, oy + 5, EYE)
-	img.set_pixel(ox + 6, oy + 5, EYE)
-	img.set_pixel(ox + 9, oy + 5, EYE)
-	img.set_pixel(ox + 10, oy + 5, EYE)
-	## Face outline
-	img.set_pixel(ox + 3, oy + 4, OL)
-	img.set_pixel(ox + 12, oy + 4, OL)
-	img.set_pixel(ox + 3, oy + 5, OL)
-	img.set_pixel(ox + 12, oy + 5, OL)
-	img.set_pixel(ox + 3, oy + 6, OL)
-	img.set_pixel(ox + 12, oy + 6, OL)
-
-	## Shirt (rows 7-10)
-	for y in range(7, 11):
-		_hline(img, ox, oy, 4, 11, SHT, y)
-	## Shirt shadow on edges
-	for y in range(7, 11):
-		img.set_pixel(ox + 4, oy + y, SHD)
-		img.set_pixel(ox + 11, oy + y, SHD)
-	## Shirt outline
-	for y in range(7, 11):
-		img.set_pixel(ox + 3, oy + y, OL)
-		img.set_pixel(ox + 12, oy + y, OL)
-
-	## Arms (skin on sides of shirt)
-	for y in range(7, 10):
-		img.set_pixel(ox + 3, oy + y, SKN)
-		img.set_pixel(ox + 12, oy + y, SKN)
-		img.set_pixel(ox + 2, oy + y, OL)
-		img.set_pixel(ox + 13, oy + y, OL)
-
-	## Pants (rows 11-13)
-	for y in range(11, 14):
-		_hline(img, ox, oy, 4, 7, PNT, y)
-		_hline(img, ox, oy, 8, 11, PNT, y)
-	## Leg gap
-	img.set_pixel(ox + 7, oy + 12, OL)
-	img.set_pixel(ox + 8, oy + 12, OL)
-	## Pants shadow
-	for y in range(11, 14):
-		img.set_pixel(ox + 4, oy + y, PND)
-		img.set_pixel(ox + 11, oy + y, PND)
-
-	## Shoes (rows 14-15)
-	_hline(img, ox, oy, 3, 7, SHO, 14)
-	_hline(img, ox, oy, 8, 12, SHO, 14)
-	_hline(img, ox, oy, 3, 7, SHO, 15)
-	_hline(img, ox, oy, 8, 12, SHO, 15)
-
-	## Walk: shift one leg
-	if step:
-		_hline(img, ox, oy, 8, 11, PNT, 14)
-		_hline(img, ox, oy, 8, 12, SHO, 15)
-		img.set_pixel(ox + 7, oy + 14, Color(0, 0, 0, 0))
+func _blit(src: Image, sx: int, sy: int, dst: Image, dx: int, dy: int, w: int, h: int) -> void:
+	for y in h:
+		for x in w:
+			var px := sx + x
+			var py := sy + y
+			if px < src.get_width() and py < src.get_height():
+				var c := src.get_pixel(px, py)
+				if c.a > 0.01:
+					dst.set_pixel(dx + x, dy + y, c)
 
 
-## ── Up-facing frame ─────────────────────────────────────────────────────────
-func _draw_up(img: Image, ox: int, oy: int, step: bool) -> void:
-	## Hair / back of cap (rows 0-3)
-	_hline(img, ox, oy, 5, 10, HRS, 0)
-	_hline(img, ox, oy, 4, 11, HRS, 1)
-	_hline(img, ox, oy, 4, 11, HRS, 2)
-	_hline(img, ox, oy, 4, 11, CAP, 3)  ## cap band visible from back
-	## Outline
-	_hline(img, ox, oy, 5, 10, OL, 0)
-	img.set_pixel(ox + 4, oy + 1, OL)
-	img.set_pixel(ox + 11, oy + 1, OL)
-
-	## Back of head (rows 4-6)
-	for y in range(4, 7):
-		_hline(img, ox, oy, 4, 11, SKN, y)
-		img.set_pixel(ox + 3, oy + y, OL)
-		img.set_pixel(ox + 12, oy + y, OL)
-
-	## Shirt back
-	for y in range(7, 11):
-		_hline(img, ox, oy, 4, 11, SHT, y)
-		img.set_pixel(ox + 4, oy + y, SHD)
-		img.set_pixel(ox + 11, oy + y, SHD)
-	for y in range(7, 10):
-		img.set_pixel(ox + 3, oy + y, SKN)
-		img.set_pixel(ox + 12, oy + y, SKN)
-		img.set_pixel(ox + 2, oy + y, OL)
-		img.set_pixel(ox + 13, oy + y, OL)
-	img.set_pixel(ox + 3, oy + 10, OL)
-	img.set_pixel(ox + 12, oy + 10, OL)
-
-	## Pants
-	for y in range(11, 14):
-		_hline(img, ox, oy, 4, 7, PNT, y)
-		_hline(img, ox, oy, 8, 11, PNT, y)
-	img.set_pixel(ox + 7, oy + 12, OL)
-	img.set_pixel(ox + 8, oy + 12, OL)
-
-	## Shoes
-	_hline(img, ox, oy, 3, 7, SHO, 14)
-	_hline(img, ox, oy, 8, 12, SHO, 14)
-	_hline(img, ox, oy, 3, 7, SHO, 15)
-	_hline(img, ox, oy, 8, 12, SHO, 15)
-
-	if step:
-		_hline(img, ox, oy, 8, 11, PNT, 14)
-		_hline(img, ox, oy, 8, 12, SHO, 15)
-
-
-## ── Side-facing frame (left or mirrored to right) ──────────────────────────
-func _draw_side(img: Image, ox: int, oy: int, right: bool, step: bool) -> void:
-	## For right-facing, we draw left then mirror
-	var buf := Image.create(SPRITE_SIZE, SPRITE_SIZE, false, Image.FORMAT_RGBA8)
-	buf.fill(Color(0, 0, 0, 0))
-
-	## Cap
-	_hline_buf(buf, 4, 10, CAP, 0)
-	_hline_buf(buf, 3, 11, CAP, 1)
-	buf.set_pixel(7, 1, CPW)
-	_hline_buf(buf, 3, 11, CAP, 2)
-	_hline_buf(buf, 2, 12, CPD, 3)  ## brim extends forward
-	## Outline
-	_hline_buf(buf, 4, 10, OL, 0)
-	buf.set_pixel(3, 1, OL)
-	buf.set_pixel(11, 1, OL)
-
-	## Face (looking left = features on left side)
-	for y in range(4, 7):
-		_hline_buf(buf, 4, 11, SKN, y)
-		buf.set_pixel(3, y, OL)
-		buf.set_pixel(11, y, OL)
-	## Eye (only one visible)
-	buf.set_pixel(5, 5, EYE)
-	buf.set_pixel(6, 5, EYE)
-
-	## Shirt
-	for y in range(7, 11):
-		_hline_buf(buf, 4, 11, SHT, y)
-		buf.set_pixel(4, y, SHD)
-	## Arm (front)
-	for y in range(7, 10):
-		buf.set_pixel(3, y, SKN)
-		buf.set_pixel(2, y, OL)
-	buf.set_pixel(3, 10, OL)
-	buf.set_pixel(11, 10, OL)
-
-	## Pants
-	for y in range(11, 14):
-		_hline_buf(buf, 4, 7, PNT, y)
-		_hline_buf(buf, 8, 11, PNT, y)
-	buf.set_pixel(7, 12, OL)
-	buf.set_pixel(8, 12, OL)
-
-	## Shoes
-	_hline_buf(buf, 3, 7, SHO, 14)
-	_hline_buf(buf, 8, 12, SHO, 14)
-	_hline_buf(buf, 3, 7, SHO, 15)
-	_hline_buf(buf, 8, 12, SHO, 15)
-
-	if step:
-		_hline_buf(buf, 8, 11, PNT, 14)
-		_hline_buf(buf, 8, 12, SHO, 15)
-
-	## Mirror for right-facing
-	if right:
-		buf.flip_x()
-
-	## Blit to main image
-	for y in SPRITE_SIZE:
-		for x in SPRITE_SIZE:
-			var c := buf.get_pixel(x, y)
-			if c.a > 0.01:
-				img.set_pixel(ox + x, oy + y, c)
-
-
-## ── Helpers ─────────────────────────────────────────────────────────────────
-func _hline(img: Image, ox: int, oy: int, x1: int, x2: int, col: Color, row: int = 0) -> void:
-	for x in range(x1, x2 + 1):
-		img.set_pixel(ox + x, oy + row, col)
-
-func _hline_buf(buf: Image, x1: int, x2: int, col: Color, row: int) -> void:
-	for x in range(x1, x2 + 1):
-		buf.set_pixel(x, row, col)
+func _generate_fallback(sheet: Image) -> void:
+	## Minimal colored rectangles as fallback
+	var colors := {
+		0: Color(0.82, 0.14, 0.14),  ## down - red
+		1: Color(0.14, 0.14, 0.82),  ## up - blue
+		2: Color(0.14, 0.82, 0.14),  ## left - green
+		3: Color(0.82, 0.82, 0.14),  ## right - yellow
+	}
+	for row in 4:
+		var col: Color = colors[row]
+		for frame in 2:
+			var ox := frame * SPRITE_W
+			var oy := row * SPRITE_H
+			for y in range(6, 28):
+				for x in range(2, 14):
+					sheet.set_pixel(ox + x, oy + y, col)
 
 
 func _apply_to_player(tex: ImageTexture) -> void:
@@ -256,7 +108,6 @@ func _apply_to_player(tex: ImageTexture) -> void:
 	_do_apply(tex)
 
 
-## Re-apply the cached texture to the current player — call after every scene change.
 func reapply() -> void:
 	if _tex != null:
 		_do_apply(_tex)
