@@ -194,7 +194,7 @@ func _refresh_move_buttons() -> void:
 	var bench := GameState.get_bench()
 	var combo_btn: Button = _move_btns[3]
 	if bench.is_empty() or _player.bench_blocked_turns > 0:
-		combo_btn.text = bench.is_empty() ? "—" : "BLOCKED"
+		combo_btn.text = "—" if bench.is_empty() else "BLOCKED"
 		combo_btn.disabled = true
 		combo_btn.modulate = Color.WHITE
 	else:
