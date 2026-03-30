@@ -7,6 +7,9 @@ extends Node
 
 const SPRITE_SIZE := 16
 
+## Cached texture so we can reapply after scene changes.
+var _tex: ImageTexture = null
+
 ## Trainer color palette
 const C_CAP       := Color(0.80, 0.15, 0.15)   ## Red cap
 const C_CAP_BRIM  := Color(0.60, 0.10, 0.10)   ## Darker brim
@@ -38,8 +41,8 @@ func _generate_player_spritesheet() -> void:
 	_draw_frame(img,  0, 48, Vector2.RIGHT, false)
 	_draw_frame(img, 16, 48, Vector2.RIGHT, true)
 
-	var tex := ImageTexture.create_from_image(img)
-	_apply_to_player(tex)
+	_tex = ImageTexture.create_from_image(img)
+	_apply_to_player(_tex)
 
 
 ## Draw one 16×16 trainer frame at pixel offset (ox, oy).
@@ -135,6 +138,16 @@ func _draw_frame(img: Image, ox: int, oy: int, dir: Vector2, step: bool) -> void
 func _apply_to_player(tex: ImageTexture) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
+	_do_apply(tex)
+
+
+## Re-apply the cached texture to the current player — call after every scene change.
+func reapply() -> void:
+	if _tex != null:
+		_do_apply(_tex)
+
+
+func _do_apply(tex: ImageTexture) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if not player:
 		return
