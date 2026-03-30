@@ -1,12 +1,16 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/test_map.gd" id="1_map"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_joystick.tscn" id="3_joystick"]
 [ext_resource type="Script" path="res://scripts/transition_zone.gd" id="4_transition"]
+[ext_resource type="Script" path="res://scripts/encounter_zone.gd" id="5_encounter"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
 size = Vector2(16, 48)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_grass"]
+size = Vector2(144, 112)
 
 [node name="TestMap" type="Node2D"]
 script = ExtResource("1_map")
@@ -28,6 +32,19 @@ spawn_position = Vector2(32, 160)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitZone"]
 shape = SubResource("RectangleShape2D_exit")
+
+[node name="GrassEncounterZone" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("5_encounter")
+encounter_table = {"flick": 60, "tuft": 40}
+level_min = 3
+level_max = 5
+encounter_rate = 0.15
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrassEncounterZone"]
+position = Vector2(216, 72)
+shape = SubResource("RectangleShape2D_grass")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

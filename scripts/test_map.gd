@@ -22,6 +22,10 @@ func _ready() -> void:
 	_build_map()
 	_setup_camera_bounds()
 
+	# Bootstrap: give the player a starter for testing if they don't have one
+	if not GameState.has_starter:
+		GameState.give_starter("ember")
+
 
 ## Build the test map layout.
 func _build_map() -> void:

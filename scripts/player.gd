@@ -4,8 +4,12 @@
 
 extends CharacterBody2D
 
-# Movement speed in pixels per second
-const SPEED := 80.0
+## Emitted each time the player snaps to a new tile position.
+## EncounterZone listens to this to roll for wild encounters.
+signal tile_stepped
+
+# Movement speed in pixels per second — 128px/s = one 16px tile every ~0.125s
+const SPEED := 128.0
 # Size of one tile in pixels — used for grid-aligned movement
 const TILE_SIZE := 16
 
@@ -39,11 +43,15 @@ func _physics_process(delta: float) -> void:
 ## Move the player toward the target tile position.
 func _move_toward_target(delta: float) -> void:
 	var move_vec := (target_pos - position)
-	if move_vec.length() < 1.0:
-		# Snap to target when close enough
+	if move_vec.length() <= SPEED * delta:
+		# Snap exactly to the tile — no overshoot
 		position = target_pos
 		is_moving = false
-		_play_idle()
+		tile_stepped.emit()
+		# Immediately check for held input so steps chain without a gap frame
+		_try_start_move()
+		if not is_moving:
+			_play_idle()
 	else:
 		position += move_vec.normalized() * SPEED * delta
 
