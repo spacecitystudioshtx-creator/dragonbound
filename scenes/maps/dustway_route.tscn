@@ -1,0 +1,83 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/dustway_route.gd" id="1_map"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_joystick.tscn" id="3_joystick"]
+[ext_resource type="Script" path="res://scripts/transition_zone.gd" id="4_transition"]
+[ext_resource type="Script" path="res://scripts/encounter_zone.gd" id="5_encounter"]
+
+[sub_resource type="RectangleShape2D" id="exit_west"]
+size = Vector2(16, 48)
+
+[sub_resource type="RectangleShape2D" id="grass_south"]
+size = Vector2(240, 128)
+
+[sub_resource type="RectangleShape2D" id="grass_pond"]
+size = Vector2(80, 64)
+
+[sub_resource type="RectangleShape2D" id="grass_north"]
+size = Vector2(272, 96)
+
+[node name="DustwayRoute" type="Node2D"]
+script = ExtResource("1_map")
+
+[node name="GroundLayer" type="TileMapLayer" parent="."]
+
+[node name="ObstacleLayer" type="TileMapLayer" parent="."]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(24, 632)
+
+[node name="ExitToKindra" type="Area2D" parent="."]
+position = Vector2(4, 632)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_town.tscn"
+spawn_position = Vector2(456, 232)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitToKindra"]
+shape = SubResource("exit_west")
+
+[node name="GrassZoneSouth" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("5_encounter")
+encounter_table = {"flick": 60, "tuft": 40}
+level_min = 3
+level_max = 5
+encounter_rate = 0.15
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZoneSouth"]
+position = Vector2(160, 488)
+shape = SubResource("grass_south")
+
+[node name="GrassZonePond" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("5_encounter")
+encounter_table = {"flick": 30, "tuft": 30, "gulp": 40}
+level_min = 4
+level_max = 6
+encounter_rate = 0.15
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZonePond"]
+position = Vector2(232, 344)
+shape = SubResource("grass_pond")
+
+[node name="GrassZoneNorth" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("5_encounter")
+encounter_table = {"flick": 40, "tuft": 40, "gulp": 20}
+level_min = 5
+level_max = 7
+encounter_rate = 0.18
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZoneNorth"]
+position = Vector2(160, 152)
+shape = SubResource("grass_north")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="TouchJoystick" parent="CanvasLayer" instance=ExtResource("3_joystick")]

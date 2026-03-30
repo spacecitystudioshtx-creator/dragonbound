@@ -47,6 +47,10 @@ func change_scene(scene_path: String, spawn_pos := Vector2(-1, -1)) -> void:
 			player.position = spawn_pos
 			player.target_pos = spawn_pos
 
+	# Re-apply placeholder sprite after scene change
+	if PlaceholderSprites and PlaceholderSprites.has_method("reapply"):
+		PlaceholderSprites.reapply()
+
 	# Fade back in
 	await _fade_in()
 	is_transitioning = false

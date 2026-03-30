@@ -56,8 +56,8 @@ var _player_hp_bar:     ColorRect
 var _enemy_hp_label:    Label
 var _player_hp_label:   Label
 var _player_name_label: Label
-var _enemy_sprite:      ColorRect
-var _player_sprite:     ColorRect
+var _enemy_sprite:      Control
+var _player_sprite:     Control
 
 # ── Battle data ───────────────────────────────────────────────────────────────
 var _player: DrakeInstance
@@ -87,11 +87,9 @@ func _build_ui() -> void:
 	_add_rect(Vector2(18, 56), Vector2(80, 10), C_PLATFORM)   ## enemy
 	_add_rect(Vector2(222, 92), Vector2(80, 10), C_PLATFORM)  ## player
 
-	## Drake sprites (placeholder colored rects)
-	_enemy_sprite = _add_rect(Vector2(30, 22), Vector2(32, 32),
-			DRAKE_COL.get(_enemy.data.type, Color.WHITE))
-	_player_sprite = _add_rect(Vector2(258, 58), Vector2(32, 32),
-			DRAKE_COL.get(_player.data.type, Color.WHITE))
+	## Drake sprites (use generated art if available, fallback to colored rects)
+	_enemy_sprite = _create_drake_visual(Vector2(30, 22), Vector2(32, 32), _enemy)
+	_player_sprite = _create_drake_visual(Vector2(258, 58), Vector2(32, 32), _player)
 
 	## Info boxes
 	_build_info_box(Vector2(148, 6),  _enemy,  true)
@@ -510,6 +508,28 @@ func _finish() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 # Node factory helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
+	var name_lower := drake.data.drake_name.to_lower()
+	var tex_path := "res://art/drakes/" + name_lower + "_front.png"
+	var tex: Texture2D = null
+	if ResourceLoader.exists(tex_path):
+		tex = load(tex_path)
+	if tex == null and FileAccess.file_exists(tex_path):
+		var img := Image.new()
+		if img.load(tex_path) == OK:
+			tex = ImageTexture.create_from_image(img)
+	if tex:
+		var tex_rect := TextureRect.new()
+		tex_rect.texture = tex
+		tex_rect.position = pos
+		tex_rect.size = sz
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		add_child(tex_rect)
+		return tex_rect
+	return _add_rect(pos, sz, DRAKE_COL.get(drake.data.type, Color.WHITE))
+
 
 func _add_rect(pos: Vector2, sz: Vector2, color: Color, border_only: bool = false) -> ColorRect:
 	var r := ColorRect.new()
