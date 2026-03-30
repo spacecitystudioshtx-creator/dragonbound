@@ -539,10 +539,9 @@ func _finish() -> void:
 func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
 	var name_lower := drake.data.drake_name.to_lower()
 	var tex_path := "res://art/drakes/" + name_lower + "_front.png"
-	if FileAccess.file_exists(tex_path):
-		var img := Image.load_from_file(tex_path)
-		if img:
-			var tex := ImageTexture.create_from_image(img)
+	if ResourceLoader.exists(tex_path):
+		var tex: Texture2D = load(tex_path)
+		if tex:
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = tex
 			tex_rect.position = pos
