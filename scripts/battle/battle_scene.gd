@@ -343,7 +343,7 @@ func _end_of_turn_effects() -> void:
 		var drake: DrakeInstance = pair[0]
 		var label: String = pair[1]
 		if drake.is_burned and not drake.is_fainted():
-			var dmg := max(1, int(drake.get_max_hp() * 0.10))
+			var dmg := maxi(1, int(drake.get_max_hp() * 0.10))
 			drake.take_damage(dmg)
 			_update_hp_bars()
 			await _show_and_wait(label + " is burning! (-" + str(dmg) + " HP)")
@@ -394,7 +394,7 @@ func _execute_move(mv: MoveData, atk: DrakeInstance, def: DrakeInstance, bench: 
 
 		## Recoil
 		if mv.effect == MoveData.Effect.SELF_DAMAGE:
-			var recoil := max(1, int(atk.get_max_hp() * mv.effect_value))
+			var recoil := maxi(1, int(atk.get_max_hp() * mv.effect_value))
 			atk.take_damage(recoil)
 			_update_hp_bars()
 			await _show_and_wait(atk.nickname + " took " + str(recoil) + " recoil damage!")

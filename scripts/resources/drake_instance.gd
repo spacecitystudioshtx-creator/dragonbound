@@ -51,14 +51,14 @@ func is_fainted() -> bool:
 
 ## Apply pre-calculated damage. Returns actual HP lost.
 func take_damage(amount: int) -> int:
-	var applied := max(1, amount)
+	var applied := maxi(1, amount)
 	current_hp = max(0, current_hp - applied)
 	return applied
 
 
 ## Restore HP up to max. Returns actual HP gained.
 func heal(amount: int) -> int:
-	var actual := min(amount, get_max_hp() - current_hp)
+	var actual := mini(amount, get_max_hp() - current_hp)
 	current_hp += actual
 	return actual
 
