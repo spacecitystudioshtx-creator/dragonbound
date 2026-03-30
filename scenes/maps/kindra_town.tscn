@@ -20,7 +20,7 @@ script = ExtResource("1_map")
 [node name="ObstacleLayer" type="TileMapLayer" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(136, 360)
+position = Vector2(136, 424)
 
 [node name="ExitToDustway" type="Area2D" parent="."]
 position = Vector2(472, 232)

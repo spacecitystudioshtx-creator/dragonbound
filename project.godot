@@ -29,6 +29,7 @@ PlaceholderTileset="*res://scripts/placeholder_tileset.gd"
 DrakeDatabase="*res://scripts/drake_database.gd"
 GameState="*res://scripts/game_state.gd"
 BattleManager="*res://scripts/battle/battle_manager.gd"
+DrakeSprites="*res://scripts/drake_sprites.gd"
 
 [display]
 

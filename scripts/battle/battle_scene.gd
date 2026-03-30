@@ -13,18 +13,19 @@ const PANEL_H := 60    ## Pixels for the bottom UI panel
 const BTN_W   := 160
 const BTN_H   := 30
 
-# ── Palette ──────────────────────────────────────────────────────────────────
-const C_FIELD      := Color(0.55, 0.47, 0.35)
-const C_PLATFORM   := Color(0.42, 0.35, 0.25)
-const C_PANEL      := Color(0.10, 0.07, 0.03)
-const C_BORDER     := Color(0.28, 0.18, 0.08)
-const C_TEXT       := Color(1.00, 0.97, 0.90)
+# ── Palette (FireRed-matched) ────────────────────────────────────────────────
+const C_FIELD      := Color(0.55, 0.78, 0.55)  ## Green grass field
+const C_FIELD_TOP  := Color(0.60, 0.82, 0.92)  ## Sky blue gradient top
+const C_PLATFORM   := Color(0.48, 0.62, 0.38)  ## Grassy platform shadow
+const C_PANEL      := Color(0.96, 0.94, 0.88)  ## Cream white panel (FireRed style)
+const C_BORDER     := Color(0.20, 0.22, 0.25)  ## Dark border
+const C_TEXT       := Color(0.12, 0.12, 0.15)  ## Dark text on light panel
 const C_HP_HIGH    := Color(0.20, 0.85, 0.20)
 const C_HP_MED     := Color(0.90, 0.85, 0.10)
 const C_HP_LOW     := Color(0.90, 0.20, 0.10)
-const C_HP_BG      := Color(0.12, 0.12, 0.12)
-const C_BTN        := Color(0.18, 0.12, 0.05)
-const C_BTN_BORDER := Color(0.35, 0.23, 0.10)
+const C_HP_BG      := Color(0.18, 0.18, 0.20)
+const C_BTN        := Color(0.92, 0.90, 0.85)  ## Light button (FireRed style)
+const C_BTN_BORDER := Color(0.35, 0.38, 0.42)  ## Medium gray border
 
 ## Tint colors for placeholder drake rectangles
 const DRAKE_COL := {
@@ -80,16 +81,17 @@ func _ready() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _build_ui() -> void:
-	## Field background
-	_add_rect(Vector2.ZERO, Vector2(VP_W, FIELD_H), C_FIELD)
+	## Field background — sky gradient top half, grass bottom half (FireRed style)
+	_add_rect(Vector2.ZERO, Vector2(VP_W, 60), C_FIELD_TOP)
+	_add_rect(Vector2(0, 60), Vector2(VP_W, 60), C_FIELD)
 
-	## Platforms
-	_add_rect(Vector2(18, 56), Vector2(80, 10), C_PLATFORM)   ## enemy
-	_add_rect(Vector2(222, 92), Vector2(80, 10), C_PLATFORM)  ## player
+	## Oval platform shadows (ellipse effect via stacked rects)
+	_draw_platform(38, 60, 50)    ## enemy platform
+	_draw_platform(262, 96, 50)   ## player platform
 
-	## Drake sprites (use generated art if available, fallback to colored rects)
-	_enemy_sprite = _create_drake_visual(Vector2(30, 22), Vector2(32, 32), _enemy)
-	_player_sprite = _create_drake_visual(Vector2(258, 58), Vector2(32, 32), _player)
+	## Drake sprites (48x48 for better visibility)
+	_enemy_sprite = _create_drake_visual(Vector2(22, 10), Vector2(48, 48), _enemy)
+	_player_sprite = _create_drake_visual(Vector2(246, 46), Vector2(48, 48), _player)
 
 	## Info boxes
 	_build_info_box(Vector2(148, 6),  _enemy,  true)
@@ -128,8 +130,9 @@ func _build_ui() -> void:
 
 
 func _build_info_box(pos: Vector2, drake: DrakeInstance, is_enemy: bool) -> void:
-	_add_rect(pos, Vector2(160, 46), Color(0.07, 0.04, 0.01, 0.88))
-	_add_rect(pos, Vector2(160, 46), Color(0.28, 0.18, 0.08, 0.5), true)
+	## FireRed-style info box: white fill with dark border
+	_add_rect(pos - Vector2(1, 1), Vector2(162, 48), C_BORDER)  ## border
+	_add_rect(pos, Vector2(160, 46), Color(0.96, 0.94, 0.88))   ## white fill
 
 	var name_lbl := _add_label(pos + Vector2(4, 3), Vector2(152, 12),
 			drake.nickname + "  Lv" + str(drake.level))
@@ -192,7 +195,7 @@ func _refresh_move_buttons() -> void:
 	var bench := GameState.get_bench()
 	var combo_btn: Button = _move_btns[3]
 	if bench.is_empty() or _player.bench_blocked_turns > 0:
-		combo_btn.text = bench.is_empty() ? "—" : "BLOCKED"
+		combo_btn.text = "—" if bench.is_empty() else "BLOCKED"
 		combo_btn.disabled = true
 		combo_btn.modulate = Color.WHITE
 	else:
@@ -233,8 +236,13 @@ func _update_one_bar(drake: DrakeInstance, bar: ColorRect, lbl: Label, is_enemy:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _state == State.MESSAGE and event.is_action_pressed("ui_accept"):
+	if not event.is_action_pressed("ui_accept"):
+		return
+	if _state == State.MESSAGE:
 		_msg_confirmed = true
+	elif _state == State.SELECT:
+		## Enter key picks the first available move
+		_on_move_pressed(0)
 
 
 func _on_move_pressed(idx: int) -> void:
@@ -341,7 +349,7 @@ func _end_of_turn_effects() -> void:
 		var drake: DrakeInstance = pair[0]
 		var label: String = pair[1]
 		if drake.is_burned and not drake.is_fainted():
-			var dmg := max(1, int(drake.get_max_hp() * 0.10))
+			var dmg := maxi(1, int(drake.get_max_hp() * 0.10))
 			drake.take_damage(dmg)
 			_update_hp_bars()
 			await _show_and_wait(label + " is burning! (-" + str(dmg) + " HP)")
@@ -392,7 +400,7 @@ func _execute_move(mv: MoveData, atk: DrakeInstance, def: DrakeInstance, bench: 
 
 		## Recoil
 		if mv.effect == MoveData.Effect.SELF_DAMAGE:
-			var recoil := max(1, int(atk.get_max_hp() * mv.effect_value))
+			var recoil := maxi(1, int(atk.get_max_hp() * mv.effect_value))
 			atk.take_damage(recoil)
 			_update_hp_bars()
 			await _show_and_wait(atk.nickname + " took " + str(recoil) + " recoil damage!")
@@ -509,16 +517,23 @@ func _finish() -> void:
 # Node factory helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+func _draw_platform(cx: int, cy: int, rx: int) -> void:
+	## Draw an oval shadow platform using stacked horizontal rects
+	var ry := 6
+	for dy in range(-ry, ry + 1):
+		var half_w := int(float(rx) * sqrt(1.0 - float(dy * dy) / float(ry * ry)))
+		var shade := C_PLATFORM.darkened(0.1 + 0.15 * (float(dy) / float(ry)))
+		_add_rect(Vector2(cx - half_w, cy + dy), Vector2(half_w * 2, 1), shade)
+
 func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
 	var name_lower := drake.data.drake_name.to_lower()
-	var tex_path := "res://art/drakes/" + name_lower + "_front.png"
-	var tex: Texture2D = null
-	if ResourceLoader.exists(tex_path):
-		tex = load(tex_path)
-	if tex == null and FileAccess.file_exists(tex_path):
-		var img := Image.new()
-		if img.load(tex_path) == OK:
-			tex = ImageTexture.create_from_image(img)
+	## Try procedural sprite cache first (always available)
+	var tex: Texture2D = DrakeSprites.get_sprite(name_lower)
+	## Fallback: try loading from file
+	if tex == null:
+		var tex_path := "res://art/drakes/" + name_lower + "_front.png"
+		if ResourceLoader.exists(tex_path):
+			tex = load(tex_path)
 	if tex:
 		var tex_rect := TextureRect.new()
 		tex_rect.texture = tex
@@ -575,10 +590,16 @@ func _make_button(pos: Vector2, sz: Vector2, text: String) -> Button:
 	btn.add_theme_stylebox_override("normal", normal)
 
 	var hover := StyleBoxFlat.new()
-	hover.bg_color     = C_BTN_BORDER
-	hover.border_color = C_TEXT
+	hover.bg_color     = Color(0.82, 0.80, 0.75)
+	hover.border_color = Color(0.15, 0.15, 0.18)
 	hover.set_border_width_all(1)
 	btn.add_theme_stylebox_override("hover", hover)
+
+	var pressed_sb := StyleBoxFlat.new()
+	pressed_sb.bg_color     = Color(0.72, 0.70, 0.65)
+	pressed_sb.border_color = Color(0.10, 0.10, 0.12)
+	pressed_sb.set_border_width_all(1)
+	btn.add_theme_stylebox_override("pressed", pressed_sb)
 
 	add_child(btn)
 	return btn
