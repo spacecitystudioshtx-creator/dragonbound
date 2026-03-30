@@ -177,7 +177,7 @@ func _draw_up(img: Image, ox: int, oy: int, step: bool) -> void:
 ## ── Side-facing frame (left or mirrored to right) ──────────────────────────
 func _draw_side(img: Image, ox: int, oy: int, right: bool, step: bool) -> void:
 	## For right-facing, we draw left then mirror
-	var buf := Image.create(TILE_SIZE, TILE_SIZE, false, Image.FORMAT_RGBA8)
+	var buf := Image.create(SPRITE_SIZE, SPRITE_SIZE, false, Image.FORMAT_RGBA8)
 	buf.fill(Color(0, 0, 0, 0))
 
 	## Cap
@@ -233,8 +233,8 @@ func _draw_side(img: Image, ox: int, oy: int, right: bool, step: bool) -> void:
 		buf.flip_x()
 
 	## Blit to main image
-	for y in TILE_SIZE:
-		for x in TILE_SIZE:
+	for y in SPRITE_SIZE:
+		for x in SPRITE_SIZE:
 			var c := buf.get_pixel(x, y)
 			if c.a > 0.01:
 				img.set_pixel(ox + x, oy + y, c)
