@@ -113,8 +113,16 @@ func _get_input_direction() -> Vector2:
 		return Vector2(0, sign(dir.y))
 
 
-## Check if the target position is walkable via a short raycast.
+## Check if the target position is walkable.
+## Uses direct tile lookup on the obstacle layer (data-driven, like Pokémon)
+## with a physics raycast as fallback for non-tile obstacles.
 func _can_move_to(target: Vector2) -> bool:
+	## Direct tile check — any tile on the obstacle layer blocks movement
+	var tile_coord := Vector2i(int(target.x / TILE_SIZE), int(target.y / TILE_SIZE))
+	var obs := _get_obstacle_layer()
+	if obs and obs.get_cell_source_id(tile_coord) != -1:
+		return false
+	## Physics raycast fallback (for Area2D or StaticBody2D obstacles)
 	var space := get_world_2d().direct_space_state
 	var query := PhysicsRayQueryParameters2D.create(
 		position, target, 2  # Collision mask layer 2 = obstacles
@@ -122,6 +130,17 @@ func _can_move_to(target: Vector2) -> bool:
 	query.exclude = [get_rid()]
 	var result := space.intersect_ray(query)
 	return result.is_empty()
+
+
+var _obs_layer_cache: TileMapLayer = null
+
+func _get_obstacle_layer() -> TileMapLayer:
+	if _obs_layer_cache:
+		return _obs_layer_cache
+	var parent := get_parent()
+	if parent:
+		_obs_layer_cache = parent.get_node_or_null("ObstacleLayer") as TileMapLayer
+	return _obs_layer_cache
 
 
 ## Play the idle animation for the current facing direction.

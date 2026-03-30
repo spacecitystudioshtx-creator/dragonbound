@@ -539,17 +539,24 @@ func _finish() -> void:
 func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
 	var name_lower := drake.data.drake_name.to_lower()
 	var tex_path := "res://art/drakes/" + name_lower + "_front.png"
+	var tex: Texture2D = null
+	## Try Godot import system
 	if ResourceLoader.exists(tex_path):
-		var tex: Texture2D = load(tex_path)
-		if tex:
-			var tex_rect := TextureRect.new()
-			tex_rect.texture = tex
-			tex_rect.position = pos
-			tex_rect.size = sz
-			tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			add_child(tex_rect)
-			return tex_rect
+		tex = load(tex_path)
+	## Fallback: load raw PNG from disk
+	if tex == null and FileAccess.file_exists(tex_path):
+		var img := Image.new()
+		if img.load(tex_path) == OK:
+			tex = ImageTexture.create_from_image(img)
+	if tex:
+		var tex_rect := TextureRect.new()
+		tex_rect.texture = tex
+		tex_rect.position = pos
+		tex_rect.size = sz
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		add_child(tex_rect)
+		return tex_rect
 	return _add_rect(pos, sz, DRAKE_COL.get(drake.data.type, Color.WHITE))
 
 
