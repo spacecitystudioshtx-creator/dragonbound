@@ -59,8 +59,8 @@ var _player_hp_bar:     ColorRect
 var _enemy_hp_label:    Label        ## static "HP" text
 var _player_hp_label:   Label        ## live "cur/max" numbers
 var _player_name_label: Label
-var _enemy_sprite:      ColorRect
-var _player_sprite:     ColorRect
+var _enemy_sprite:      Control
+var _player_sprite:     Control
 
 # ── Battle data ────────────────────────────────────────────────────────────────
 var _player: DrakeInstance
@@ -96,11 +96,9 @@ func _build_ui() -> void:
 
 	## ── Drake sprites ─────────────────────────────────────────────────────
 	## Enemy: front-facing, upper-left
-	_enemy_sprite = _add_rect(Vector2(26, 24), Vector2(40, 40),
-			DRAKE_COL.get(_enemy.data.type, Color.WHITE))
+	_enemy_sprite = _create_drake_visual(Vector2(26, 24), Vector2(40, 40), _enemy)
 	## Player: back-facing (slightly larger), lower-right
-	_player_sprite = _add_rect(Vector2(230, 57), Vector2(44, 44),
-			DRAKE_COL.get(_player.data.type, Color.WHITE))
+	_player_sprite = _create_drake_visual(Vector2(230, 57), Vector2(44, 44), _player)
 
 	## ── HP info boxes ─────────────────────────────────────────────────────
 	_build_info_box(Vector2(148, 5),  _enemy,  true)
@@ -536,6 +534,25 @@ func _finish() -> void:
 # ──────────────────────────────────────────────────────────────────────────────
 # Node factory helpers
 # ──────────────────────────────────────────────────────────────────────────────
+
+## Load a real sprite PNG if available, otherwise fall back to a colored rect.
+func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
+	var name_lower := drake.data.drake_name.to_lower()
+	var tex_path := "res://art/drakes/" + name_lower + "_front.png"
+	if FileAccess.file_exists(tex_path):
+		var img := Image.load_from_file(tex_path)
+		if img:
+			var tex := ImageTexture.create_from_image(img)
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = tex
+			tex_rect.position = pos
+			tex_rect.size = sz
+			tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			add_child(tex_rect)
+			return tex_rect
+	return _add_rect(pos, sz, DRAKE_COL.get(drake.data.type, Color.WHITE))
+
 
 ## Approximate oval platform shadow with three stacked rects of different widths.
 func _draw_platform(cx: float, y: float, w: int) -> void:
