@@ -199,8 +199,8 @@ static func _draw_tree(img: Image, col: int) -> void:
 				## Check if any neighbor is inside
 				for nx in [-1, 0, 1]:
 					for ny in [-1, 0, 1]:
-						var ndx := (x + nx - cx) / rx
-						var ndy := (y + ny - cy) / ry
+						var ndx: float = (x + nx - cx) / rx
+						var ndy: float = (y + ny - cy) / ry
 						if ndx * ndx + ndy * ndy <= 1.0:
 							var cur := img.get_pixel(ox + x, y)
 							if cur != TL and cur != TD and cur != TK:
