@@ -12,7 +12,7 @@
 
 extends Node2D
 
-const API_URL := "https://api-inference.huggingface.co/models/nerijs/pixel-art-xl"
+const API_URL := "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
 const TARGET_SIZE := Vector2i(64, 64)
 const NEG_PROMPT := "blurry, realistic, 3d render, photograph, multiple creatures, text, watermark, low quality, deformed"
 
