@@ -28,8 +28,8 @@ var joystick_input := Vector2.ZERO
 
 
 func _ready() -> void:
-	# Snap to grid on spawn
-	position = position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
+	# Snap to tile center (not corner) — floor to tile, then offset by half-tile
+	position = (position / float(TILE_SIZE)).floor() * TILE_SIZE + Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 	target_pos = position
 
 
