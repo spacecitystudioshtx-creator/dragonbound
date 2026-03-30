@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 	if is_moving:
 		_move_toward_target(delta)
 	else:
-		_try_start_move()
+		_handle_idle_input()
 
 
 ## Move the player toward the target tile position.
@@ -48,7 +48,7 @@ func _move_toward_target(delta: float) -> void:
 		position = target_pos
 		is_moving = false
 		tile_stepped.emit()
-		# Immediately check for held input so steps chain without a gap frame
+		# Chain the next step immediately (no turn delay while already walking)
 		_try_start_move()
 		if not is_moving:
 			_play_idle()
@@ -56,7 +56,25 @@ func _move_toward_target(delta: float) -> void:
 		position += move_vec.normalized() * SPEED * delta
 
 
-## Read input and start a grid-based move if the way is clear.
+## Called each frame while standing still.
+## Implements the Pokémon turn-before-move mechanic: pressing a new direction
+## faces the character first; only holding it on the next frame begins walking.
+func _handle_idle_input() -> void:
+	var input_dir := _get_input_direction()
+	if input_dir == Vector2.ZERO:
+		_play_idle()
+		return
+	if input_dir != facing:
+		# Turn to face — don't step yet (brief tap just rotates the sprite)
+		facing = input_dir
+		_play_idle()
+		return
+	# Same direction held → begin the step
+	_try_start_move()
+
+
+## Start a grid-based move in the current input direction.
+## Used for step chaining (no turn delay applied here).
 func _try_start_move() -> void:
 	var input_dir := _get_input_direction()
 	if input_dir == Vector2.ZERO:
