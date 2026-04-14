@@ -1,0 +1,6 @@
+{
+  "_schema_version": 1,
+  "_doc": "Queue of sprite-generation briefs for drakes. Once local Stable Diffusion is available, the nightly AFK pipeline will pull these and generate 16x16 pixel art. Brief format: see generate-drake SKILL.md.",
+  "queue": [],
+  "generated": []
+}
