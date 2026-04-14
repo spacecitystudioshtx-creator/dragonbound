@@ -1,7 +1,28 @@
-# Dragonbound — Game Design Document
+# Dragonbound
+
+A Pokémon FireRed-style 2D pixel art creature collector RPG for iOS. Collect, battle, and evolve dragon-themed creatures called **Drakes**. Built with an AI-first content pipeline so the world builds itself from creative direction.
+
+## Status (as of 2026-04-14)
+
+**Playable scaffolding:** grid movement, 3 connected zones (Kindra → Dustway → Zone 2), turn-based battle framework, 12 drakes with moves + synergies, FireRed-style dialog textbox, auto-save. Running in Godot 4.6, CC0 art.
+
+**What works end-to-end:** walking, scene transitions, wild encounters, starter gift, save/load.
+**Not wired yet:** NPCs in the overworld, trial wardens, battle UI against trainers, music, item/bag system.
+
+## Next steps
+
+1. **Playtest the scaffolding.** Open the project in Godot, walk Kindra → Dustway → Zone 2, trigger an encounter, finish a battle. File whatever breaks.
+2. **Design Warden Brask + The Scald.** First real boss. Add his team + dialog + the cave zone — use `/generate-zone` and `/generate-drake` skills.
+3. **Queue nightly briefs.** Drop 2–3 creative prompts into `data/brief_queue.json` each evening (new drake line, a route, an NPC). The 02:16 AM task drafts them overnight.
+4. **NPC interaction.** Add walk-up-to-NPC triggers that emit `SignalBus.dialog_requested` — unlocks the dialog system already built.
+5. **Trainer battles.** Extend `battle_manager` to accept a team instead of a single wild drake; wire Sable's first encounter.
+6. **Sprites for drakes 2+.** Current 12 front sprites are stub-quality. Queue sprite briefs in `data/sprite_briefs.json` for the Stable Diffusion pass once it's online.
+
+Further out: music pass, iOS build, Roost base, Rift system.
+
+---
 
 ## Concept
-A Pokemon Fire Red-style 2D pixel art creature collector RPG for iOS. Collect, battle, and evolve dragon-themed creatures called **Drakes**. Turn-based combat with a unique **Team Synergy** system that rewards strategic party composition. Built with an AI-first content pipeline so the world builds itself from creative direction.
 
 ## Core Pillars
 1. **Pokemon nostalgia** — GBA pixel art, chiptune music, tile-based exploration, minimal handholding
@@ -100,29 +121,46 @@ Void, Celestial, Ancient, Spirit, Crystal, Blood
 ## AI Content Pipeline
 
 ### How It Works
-1. You write a creative brief: "Zone 4 is a haunted swamp. Shadow and Poison drakes. Creepy but lighthearted."
-2. AI generates:
-   - `zone_4_swamp.json` — tilemap, encounter tables, NPC placements
-   - New drake definitions — stats, moves, types, evolutions, synergies
-   - Trial Warden — personality, dialog, team composition
-   - Placeholder sprites (Stable Diffusion → pixel art conversion)
-3. You review, tweak direction, regenerate as needed
-4. Content drops into the game engine automatically (data-driven)
+1. You write a creative brief (in `data/brief_queue.json` for overnight, or inline during a session).
+2. You invoke a skill (`/generate-drake`, `/generate-zone`, `/generate-dialog`), or wait for the nightly task.
+3. The skill generates validated content and appends it to `data/` — new drakes, moves, zones, dialog.
+4. `tools/validate_data.py` checks that every reference resolves before anything commits.
+5. You review the diff in the morning, tweak direction, or approve.
 
-### Data Schemas (To Be Built)
-- `drakes.json` — All creature definitions
-- `moves.json` — All move definitions
-- `types.json` — Type effectiveness chart
-- `zones/*.json` — Zone maps, encounters, NPCs
-- `synergies.json` — Team synergy definitions
-- `wardens.json` — Trial Warden definitions
-- `dialog/*.json` — All NPC dialog trees
+### Data Schemas (Implemented)
+- `data/drakes.json`    — all creature definitions (type, class, stats, evolution, base_moves)
+- `data/moves.json`     — all move definitions (type, power, accuracy, effect)
+- `data/types.json`     — type effectiveness chart
+- `data/synergies.json` — bench-combo moves + placeholder passive bonuses
+- `data/dialog/*.json`  — NPC + sign dialog trees (one file per zone)
+- `data/sprite_briefs.json` — queue of sprite prompts for when Stable Diffusion is online
+- `data/brief_queue.json`   — overnight creative-brief queue
+
+### Skills (`.claude/skills/`)
+- **generate-drake**  — brief → new species + any moves it needs
+- **generate-zone**   — brief → Godot scene + map script + encounter tables + return transition
+- **generate-dialog** — brief → dialog tree for a zone's NPCs/signs
+
+### Nightly AFK pipeline
+A scheduled task runs at 02:16 AM daily. It reads `data/brief_queue.json`, processes up to 3 pending briefs through the appropriate skill, validates, and commits the batch. Morning log in `data/nightly_log.md`.
 
 ## Art Style
-- GBA-era pixel art (16x16 or 32x32 tiles, 64x64 creature sprites)
-- Nearest-neighbor scaling (crisp pixels, no smoothing)
-- Limited color palette per sprite (GBA authentic)
+- 16×16 tiles, nearest-neighbor scaling, crisp pixels
 - Overworld: top-down, tile-based, Fire Red camera style
+- Characters: 16×16 4-frame walk per direction (Ninja Adventure CC0 pack)
+- Tile assets: Pixel-Boy's **Ninja Adventure Asset Pack** (CC0) — `art/tilesets/ninja_adventure/`
+- Drake sprites: AI-generated 64×64, stored in `art/drakes/`
+
+## Engine Architecture
+- `project.godot` autoloads (load order matters):
+  - `SignalBus` — global event bus (dialog/battle/menu/save signals)
+  - `GameMode`  — mode stack (OVERWORLD / DIALOG / BATTLE / MENU / TRANSITION)
+  - `DrakeDatabase` — loads `data/*.json` and exposes `drakes`, `moves`, `make_drake`, `get_combo_move`, `type_effectiveness`
+  - `GameState` — party, flags, return-from-battle info
+  - `SaveSystem` — reads/writes `user://save.json`; auto-saves on battle end + flag set
+  - `DialogBox`  — FireRed-style textbox (letter-reveal, advance on Enter/tap)
+  - `MapTiles`, `PlaceholderTileset`, `PlaceholderSprites` — tile/prop/sprite loaders for the Ninja Adventure atlases
+- Maps are built procedurally in GDScript using `MapTiles` constants + `MapTiles.stamp()` for multi-tile props (trees, houses).
 
 ## Music & Audio
 - Chiptune soundtrack (8-10 tracks for MVP)

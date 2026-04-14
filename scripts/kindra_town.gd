@@ -1,25 +1,13 @@
 ## Kindra — Starter town. Volcanic hot spring village.
 ## Buildings: Player's Home, The Pyre (elder gives starter), Elder's House,
-## Supply Shop, 2 NPC houses. Hot spring pool in the southeast.
+## Supply Shop, NPC house. Hot spring pool in the southeast.
 ## Exits: East → Dustway Route 1, North → blocked until trial complete.
 
 extends Node2D
 
 const TILE_SIZE := 16
-const MAP_W := 30
-const MAP_H := 28
-
-## Tile atlas coords (col, row=0)
-const GRASS     := Vector2i(0, 0)
-const GRASS_ALT := Vector2i(1, 0)
-const TREE      := Vector2i(2, 0)
-const PATH      := Vector2i(3, 0)
-const WATER     := Vector2i(4, 0)
-const WALL      := Vector2i(5, 0)
-const ROOF      := Vector2i(6, 0)
-const DOOR      := Vector2i(7, 0)
-const TALL_GR   := Vector2i(8, 0)
-const FENCE     := Vector2i(9, 0)
+const MAP_W := 36
+const MAP_H := 30
 
 @onready var ground_layer: TileMapLayer = $GroundLayer
 @onready var obstacle_layer: TileMapLayer = $ObstacleLayer
@@ -38,130 +26,102 @@ func _ready() -> void:
 
 
 func _build_map() -> void:
-	var src := 0
+	var src := MapTiles.SRC_GROUND
 
-	## ── Ground fill ──────────────────────────────────────────────────────
+	## ── Ground fill (grass with occasional variation) ───────────────────
 	for x in MAP_W:
 		for y in MAP_H:
-			var gt := GRASS if (x + y * 3) % 7 != 0 else GRASS_ALT
+			var gt: Vector2i = MapTiles.GRASS if (x + y * 3) % 7 != 0 else MapTiles.GRASS_ALT
 			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
-	## ── Border trees ─────────────────────────────────────────────────────
-	for x in MAP_W:
-		for y in MAP_H:
-			var is_border := x == 0 or y == 0 or x == MAP_W - 1 or y == MAP_H - 1
-			## East exit gap (to Dustway) — rows 13-15
-			var is_east_exit := x == MAP_W - 1 and y >= 13 and y <= 15
-			## North exit gap — cols 14-16, blocked by fence
-			var is_north_gap := y == 0 and x >= 14 and x <= 16
-			if is_border and not is_east_exit and not is_north_gap:
-				obstacle_layer.set_cell(Vector2i(x, y), src, TREE)
+	## ── Border: ring of big trees ────────────────────────────────────────
+	## East exit (to Dustway) at rows 14-16. North exit gap at cols 17-19.
+	var east_exit_rows := range(14, 17)
+	var north_exit_cols := range(17, 20)
+	## Top + bottom rows
+	for x in range(0, MAP_W, 2):
+		if not (x in north_exit_cols):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, 0, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, MAP_H - 2, ground_layer, obstacle_layer)
+	## Left + right columns
+	for y in range(0, MAP_H, 2):
+		if not (y in east_exit_rows):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, y, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, y, ground_layer, obstacle_layer)
 
-	## North exit fence (blocked until trial complete)
-	for x in range(14, 17):
-		obstacle_layer.set_cell(Vector2i(x, 0), src, FENCE)
+	## North exit fence (blocked — trial not complete)
+	for x in north_exit_cols:
+		obstacle_layer.set_cell(Vector2i(x, 1), src, MapTiles.FENCE)
 
 	## ── Path network ─────────────────────────────────────────────────────
-	## Main east-west road (row 14)
+	## Main east-west road (row 15)
 	for x in range(2, MAP_W):
-		_set_ground(x, 14, PATH, src)
-	## Main north-south road (col 15)
+		_set_ground(x, 15, MapTiles.DIRT_PATH)
+	## Main north-south road (col 18)
 	for y in range(2, MAP_H - 1):
-		_set_ground(15, y, PATH, src)
-	## Branch to player's home (row 21, from col 5 to 15)
-	for x in range(5, 16):
-		_set_ground(x, 21, PATH, src)
-	## Branch south to player home door (col 8)
-	for y in range(21, 24):
-		_set_ground(8, y, PATH, src)
-	## Branch to Supply Shop (col 22, from row 10 to 14)
-	for y in range(10, 15):
-		_set_ground(22, y, PATH, src)
-	## Branch to Elder's house (col 10, from row 5 to 14)
-	for y in range(5, 15):
-		_set_ground(10, y, PATH, src)
-	## Branch to The Pyre (row 7, from col 15 to 21)
-	for x in range(15, 22):
-		_set_ground(x, 7, PATH, src)
+		_set_ground(18, y, MapTiles.DIRT_PATH)
+	## Branch to player's home (row 23, cols 8-18)
+	for x in range(8, 19):
+		_set_ground(x, 23, MapTiles.DIRT_PATH)
+	## Branch south to player home door (col 10)
+	for y in range(23, 26):
+		_set_ground(10, y, MapTiles.DIRT_PATH)
+	## Branch to Supply Shop (col 26, rows 10-15)
+	for y in range(10, 16):
+		_set_ground(26, y, MapTiles.DIRT_PATH)
+	## Branch to Elder's house (col 12, rows 5-15)
+	for y in range(5, 16):
+		_set_ground(12, y, MapTiles.DIRT_PATH)
+	## Branch to The Pyre (row 8, cols 18-23)
+	for x in range(18, 24):
+		_set_ground(x, 8, MapTiles.DIRT_PATH)
 
-	## ── Player's Home (south-center) ─────────────────────────────────────
-	## Roof: rows 22-23, cols 5-11
-	## Walls: rows 24-25, cols 5-11
-	## Door at col 8, row 25
-	_place_building(5, 22, 7, 4, 8, src)
+	## ── Buildings — use village-atlas stamps ─────────────────────────────
+	## Player's Home (3×3 small house) — south-center
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  9, 24, ground_layer, obstacle_layer)
+	## The Pyre (4×6 big house) — northeast, where elder gives starter
+	MapTiles.stamp(MapTiles.PROP_HOUSE_BIG,   20,  3, ground_layer, obstacle_layer)
+	## Elder Moss's House (3×3) — north-left
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  4,  4, ground_layer, obstacle_layer)
+	## Supply Shop (3×3) — east side
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL, 24, 10, ground_layer, obstacle_layer)
+	## NPC House (3×3) — west side mid
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  3, 11, ground_layer, obstacle_layer)
 
-	## ── The Pyre — Elder gives starter (center-right) ────────────────────
-	## Larger building: 9 wide, 4 tall
-	_place_building(16, 3, 9, 4, 20, src)
+	## ── Garden — tall grass patch where starters encounter ──────────────
+	## Covers the GardenEncounter Area2D in the scene.
+	for x in range(14, 18):
+		for y in range(24, 26):
+			_set_ground(x, y, MapTiles.TALL_GRASS)
+	## Flower decorations flanking the garden
+	_set_ground(13, 24, MapTiles.FLOWER)
+	_set_ground(13, 25, MapTiles.FLOWER)
+	_set_ground(18, 24, MapTiles.FLOWER)
+	_set_ground(18, 25, MapTiles.FLOWER)
 
-	## ── Elder Moss's House (north-left) ──────────────────────────────────
-	_place_building(3, 3, 6, 4, 6, src)
-
-	## ── Supply Shop (east side) ──────────────────────────────────────────
-	_place_building(20, 9, 6, 4, 22, src)
-
-	## ── NPC House 1 (west side, mid) ─────────────────────────────────────
-	_place_building(2, 10, 6, 4, 5, src)
-
-	## ── NPC House 2 (south-east) ─────────────────────────────────────────
-	_place_building(20, 19, 6, 4, 22, src)
-
-	## ── Hot spring pool (south-east) ─────────────────────────────────────
-	for x in range(23, 28):
-		for y in range(24, 27):
-			_set_ground(x, y, WATER, src)
-			obstacle_layer.set_cell(Vector2i(x, y), src, WATER)
+	## ── Hot spring pool (southeast) ──────────────────────────────────────
+	for x in range(28, 33):
+		for y in range(25, 28):
+			_set_ground(x, y, MapTiles.WATER)
+			obstacle_layer.set_cell(Vector2i(x, y), src, MapTiles.WATER)
 	## Fence around hot spring
-	for x in range(22, 29):
-		obstacle_layer.set_cell(Vector2i(x, 23), src, FENCE)
-	obstacle_layer.set_cell(Vector2i(22, 24), src, FENCE)
-	obstacle_layer.set_cell(Vector2i(22, 25), src, FENCE)
-	obstacle_layer.set_cell(Vector2i(22, 26), src, FENCE)
+	for x in range(27, 34):
+		obstacle_layer.set_cell(Vector2i(x, 24), src, MapTiles.FENCE)
+	for y in range(24, 28):
+		obstacle_layer.set_cell(Vector2i(27, y), src, MapTiles.FENCE)
 
-	## ── Decorative trees / gardens ───────────────────────────────────────
-	## Trees near The Pyre
-	for pos in [Vector2i(16, 8), Vector2i(24, 8), Vector2i(14, 2), Vector2i(26, 2)]:
-		obstacle_layer.set_cell(pos, src, TREE)
-	## Trees near elder's house
-	for pos in [Vector2i(2, 2), Vector2i(9, 2), Vector2i(2, 8)]:
-		obstacle_layer.set_cell(pos, src, TREE)
-	## Garden flowers near player's home
-	for x in range(12, 15):
-		for y in range(23, 25):
-			_set_ground(x, y, GRASS_ALT, src)
+	## ── Decorative scatter: small trees near buildings ───────────────────
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 28, 4, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 2, 24, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 14, 6, ground_layer, obstacle_layer)
 
-	## ── Sign posts ───────────────────────────────────────────────────────
-	obstacle_layer.set_cell(Vector2i(16, 14), src, FENCE)  ## Sign: "East → Dustway"
-	obstacle_layer.set_cell(Vector2i(15, 1), src, FENCE)   ## Sign: "North — Road Closed"
+	## Signs
+	obstacle_layer.set_cell(Vector2i(19, 15), src, MapTiles.SIGN)  ## "East → Dustway"
+	obstacle_layer.set_cell(Vector2i(18,  2), src, MapTiles.SIGN)  ## "North — Road Closed"
 
 
-## Place a rectangular building with roof, walls, and door.
-## bx,by = top-left corner, bw = width, bh = height (2 roof + 2 wall rows min)
-## door_x = x coordinate of the door tile (absolute)
-func _place_building(bx: int, by: int, bw: int, bh: int, door_x: int, src: int) -> void:
-	var roof_rows := bh / 2
-	var wall_rows := bh - roof_rows
-	## Roof
-	for x in range(bx, bx + bw):
-		for y in range(by, by + roof_rows):
-			obstacle_layer.set_cell(Vector2i(x, y), src, ROOF)
-	## Walls
-	for x in range(bx, bx + bw):
-		for y in range(by + roof_rows, by + bh):
-			obstacle_layer.set_cell(Vector2i(x, y), src, WALL)
-	## Door (bottom center-ish)
-	var door_y := by + bh - 1
-	obstacle_layer.set_cell(Vector2i(door_x, door_y), src, DOOR)
-	## Clear the door from the obstacle layer so player can walk on it
-	## (door is on ground, not blocking)
-	ground_layer.set_cell(Vector2i(door_x, door_y), src, DOOR)
-	obstacle_layer.erase_cell(Vector2i(door_x, door_y))
-	## Path tile in front of door
-	_set_ground(door_x, door_y + 1, PATH, src)
-
-
-func _set_ground(x: int, y: int, tile: Vector2i, src: int) -> void:
-	ground_layer.set_cell(Vector2i(x, y), src, tile)
+func _set_ground(x: int, y: int, tile: Vector2i) -> void:
+	ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, tile)
 
 
 func _setup_camera_bounds() -> void:

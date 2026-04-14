@@ -1,30 +1,68 @@
-## Loads tiles from ArMM1998 CC0 Overworld.png tileset atlas.
-## Extracts specific tiles into a strip and builds a TileSet with collision.
+## Builds a TileSet from the Ninja Adventure CC0 asset pack.
 ##
-## Tile indices (unchanged from before):
-## 0=grass, 1=grass_alt, 2=tree, 3=path, 4=water,
-## 5=building_wall, 6=roof, 7=door, 8=tall_grass, 9=fence
+## Two sources:
+##   Source 0 — 16-tile ground strip (curated from tileset_floor.png +
+##              tileset_animated.png + tileset_village_abandoned.png).
+##              Layout matches MapTiles constants (GRASS=0, GRASS_ALT=1, ...).
+##   Source 1 — full village atlas (20×12) used for multi-tile props via
+##              MapTiles.stamp().
+##
+## Solid tiles receive a 16×16 collision polygon on physics layer 1 (mask 2).
 
 extends Node
 
 const TILE_SIZE := 16
 
-## Atlas coordinates in Overworld.png (40x36 grid of 16x16 tiles)
-## Each entry is Vector2i(col, row) in the source atlas.
-const ATLAS_COORDS := {
-	0: Vector2i(0, 0),    ## Grass — solid green
-	1: Vector2i(1, 4),    ## Grass alt — lighter variation
-	2: Vector2i(5, 0),    ## Tree canopy — dark green treetop
-	3: Vector2i(7, 5),    ## Path — dirt/sand
-	4: Vector2i(17, 0),   ## Water — blue center tile
-	5: Vector2i(28, 1),   ## Building wall — gray
-	6: Vector2i(27, 18),  ## Roof — brown/orange
-	7: Vector2i(9, 10),   ## Door — brown entrance
-	8: Vector2i(2, 16),   ## Tall grass — bright green encounter grass
-	9: Vector2i(7, 0),    ## Fence — wood post/rail
-}
+const FLOOR_PATH    := "res://art/tilesets/ninja_adventure/tileset_floor.png"
+const VILLAGE_PATH  := "res://art/tilesets/ninja_adventure/tileset_village_abandoned.png"
+const ANIMATED_PATH := "res://art/tilesets/ninja_adventure/tileset_animated.png"
 
-var _atlas_image: Image = null
+## Source 0 strip. Each entry is (source_atlas_path, col, row) in the source PNG.
+## Order MUST match MapTiles constants (index = strip position).
+const STRIP := [
+	["floor",    2, 11],   ## 0  GRASS         pure green
+	["floor",    1, 12],   ## 1  GRASS_ALT     another green variant
+	["village",  2,  1],   ## 2  BUSH          small bush (single-tile tree)
+	["floor",   13, 17],   ## 3  DIRT_PATH     solid dirt
+	["floor",   14, 17],   ## 4  DIRT_ALT
+	["floor",    2,  1],   ## 5  SAND
+	["floor",    3,  1],   ## 6  SAND_ALT
+	["floor",    2, 17],   ## 7  SNOW
+	["animated", 0,  0],   ## 8  TALL_GRASS    encounter grass
+	["floor",    5,  2],   ## 9  FLOWER        decorative
+	["floor",    2, 22],   ## 10 WATER         pale blue
+	["floor",    1, 22],   ## 11 WATER_ALT
+	["village",  0,  8],   ## 12 FENCE
+	["village", 12, 10],   ## 13 SIGN          (falls back to bush-ish)
+	["village",  4,  4],   ## 14 STUMP
+	["village",  5,  4],   ## 15 ROCK
+]
+
+## Tiles in the strip that block movement.
+const STRIP_SOLID := [2, 10, 11, 12, 13, 14, 15]
+
+## Tiles in the village atlas (source 1) that block movement, as Vector2i.
+## Any tile not listed is walkable. Used for props placed via stamp().
+const VILLAGE_SOLID_COORDS := [
+	## Trees (bushy 2x2 at cols 0-1 rows 3-4)
+	Vector2i(0, 3), Vector2i(1, 3), Vector2i(0, 4),
+	## Big tree trunk (2x3 at cols 0-1 rows 6-8)
+	Vector2i(0, 6), Vector2i(1, 6), Vector2i(0, 7), Vector2i(1, 7), Vector2i(0, 8),
+	## Small house 3x3 (cols 10-12 rows 0-2)
+	Vector2i(10, 0), Vector2i(11, 0), Vector2i(12, 0),
+	Vector2i(10, 1), Vector2i(11, 1), Vector2i(12, 1),
+	Vector2i(10, 2),                  Vector2i(12, 2),   ## 11,2 is door → walkable
+	## Big house 4x6 (cols 13-16 rows 6-11)
+	Vector2i(13,  6), Vector2i(14,  6), Vector2i(15,  6), Vector2i(16,  6),
+	Vector2i(13,  7), Vector2i(14,  7), Vector2i(15,  7), Vector2i(16,  7),
+	Vector2i(13,  8), Vector2i(14,  8), Vector2i(15,  8), Vector2i(16,  8),
+	Vector2i(13,  9), Vector2i(14,  9), Vector2i(15,  9), Vector2i(16,  9),
+	Vector2i(13, 10), Vector2i(14, 10), Vector2i(15, 10), Vector2i(16, 10),
+	Vector2i(13, 11),                   Vector2i(15, 11), Vector2i(16, 11),
+	## Stump, rock, grave
+	Vector2i(4, 4), Vector2i(5, 4),
+	Vector2i(6, 0), Vector2i(7, 0), Vector2i(6, 1), Vector2i(7, 1),
+]
 
 
 static func create_placeholder_tileset() -> TileSet:
@@ -33,76 +71,81 @@ static func create_placeholder_tileset() -> TileSet:
 	tileset.add_physics_layer()
 	tileset.set_physics_layer_collision_layer(0, 2)
 
-	var cols := 10
-	var strip := Image.create(TILE_SIZE * cols, TILE_SIZE, false, Image.FORMAT_RGBA8)
+	var floor_img := _load_image(FLOOR_PATH)
+	var village_img := _load_image(VILLAGE_PATH)
+	var animated_img := _load_image(ANIMATED_PATH)
+	var images := {"floor": floor_img, "village": village_img, "animated": animated_img}
 
-	## Load the source atlas
-	var atlas_path := "res://art/tilesets/armm1998/gfx/Overworld.png"
-	var atlas_img: Image = null
-
-	if ResourceLoader.exists(atlas_path):
-		var atlas_tex: Texture2D = load(atlas_path)
-		if atlas_tex:
-			atlas_img = atlas_tex.get_image()
-
-	if atlas_img == null:
-		## Fallback: try loading directly from disk
-		atlas_img = Image.new()
-		var abs_path := ProjectSettings.globalize_path(atlas_path)
-		if atlas_img.load(abs_path) != OK:
-			push_warning("PlaceholderTileset: Could not load Overworld.png, using fallback colors")
-			atlas_img = null
-
-	## Extract each tile from the atlas into our strip
-	for i in cols:
-		var src_coord: Vector2i = ATLAS_COORDS[i]
-		var src_x := src_coord.x * TILE_SIZE
-		var src_y := src_coord.y * TILE_SIZE
-		var dst_x := i * TILE_SIZE
-
-		if atlas_img != null:
-			for y in TILE_SIZE:
-				for x in TILE_SIZE:
-					var px := src_x + x
-					var py := src_y + y
-					if px < atlas_img.get_width() and py < atlas_img.get_height():
-						strip.set_pixel(dst_x + x, y, atlas_img.get_pixel(px, py))
-					else:
-						strip.set_pixel(dst_x + x, y, Color.MAGENTA)
-		else:
-			## Minimal fallback — solid colors
-			var fallback_colors: Array[Color] = [
-				Color(0.23, 0.75, 0.25),  ## grass
-				Color(0.42, 0.87, 0.29),  ## grass alt
-				Color(0.20, 0.56, 0.25),  ## tree
-				Color(0.74, 0.60, 0.47),  ## path
-				Color(0.12, 0.49, 0.72),  ## water
-				Color(0.84, 0.84, 0.84),  ## wall
-				Color(0.66, 0.47, 0.28),  ## roof
-				Color(0.47, 0.35, 0.31),  ## door
-				Color(0.18, 0.79, 0.36),  ## tall grass
-				Color(0.47, 0.35, 0.31),  ## fence
-			]
-			for y in TILE_SIZE:
-				for x in TILE_SIZE:
-					strip.set_pixel(dst_x + x, y, fallback_colors[i])
-
-	var tex := ImageTexture.create_from_image(strip)
-	var source := TileSetAtlasSource.new()
-	source.texture = tex
-	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+	## ── Source 0: 16-tile ground strip ───────────────────────────────────────
+	var cols := STRIP.size()
+	var strip_img := Image.create(TILE_SIZE * cols, TILE_SIZE, false, Image.FORMAT_RGBA8)
+	strip_img.fill(Color(1, 0, 1, 1))
 
 	for i in cols:
-		source.create_tile(Vector2i(i, 0))
+		var entry: Array = STRIP[i]
+		var src_name: String = entry[0]
+		var sc: int = entry[1]
+		var sr: int = entry[2]
+		var src_img: Image = images.get(src_name)
+		var dx := i * TILE_SIZE
 
-	## Collision polygon (full tile)
+		if src_img != null:
+			for y in TILE_SIZE:
+				for x in TILE_SIZE:
+					var px := sc * TILE_SIZE + x
+					var py := sr * TILE_SIZE + y
+					if px < src_img.get_width() and py < src_img.get_height():
+						var c := src_img.get_pixel(px, py)
+						strip_img.set_pixel(dx + x, y, c)
+
+	var strip_tex := ImageTexture.create_from_image(strip_img)
+	var strip_src := TileSetAtlasSource.new()
+	strip_src.texture = strip_tex
+	strip_src.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+	for i in cols:
+		strip_src.create_tile(Vector2i(i, 0))
 	var poly := PackedVector2Array([
 		Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)
 	])
-	## Blocking tiles: tree(2), water(4), wall(5), roof(6), fence(9)
-	for idx in [2, 4, 5, 6, 9]:
-		source.get_tile_data(Vector2i(idx, 0), 0).add_collision_polygon(0)
-		source.get_tile_data(Vector2i(idx, 0), 0).set_collision_polygon_points(0, 0, poly)
+	for i in STRIP_SOLID:
+		var td := strip_src.get_tile_data(Vector2i(i, 0), 0)
+		td.add_collision_polygon(0)
+		td.set_collision_polygon_points(0, 0, poly)
+	tileset.add_source(strip_src, 0)
 
-	tileset.add_source(source)
+	## ── Source 1: full village atlas ─────────────────────────────────────────
+	if village_img != null:
+		var village_tex: Texture2D = load(VILLAGE_PATH)
+		if village_tex == null:
+			village_tex = ImageTexture.create_from_image(village_img)
+		var vsrc := TileSetAtlasSource.new()
+		vsrc.texture = village_tex
+		vsrc.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+		var vcols := village_img.get_width() / TILE_SIZE
+		var vrows := village_img.get_height() / TILE_SIZE
+		for c in vcols:
+			for r in vrows:
+				vsrc.create_tile(Vector2i(c, r))
+		## Apply collision to listed coords.
+		for coord in VILLAGE_SOLID_COORDS:
+			if coord.x < vcols and coord.y < vrows:
+				var td := vsrc.get_tile_data(coord, 0)
+				if td != null:
+					td.add_collision_polygon(0)
+					td.set_collision_polygon_points(0, 0, poly)
+		tileset.add_source(vsrc, 1)
+
 	return tileset
+
+
+static func _load_image(path: String) -> Image:
+	if ResourceLoader.exists(path):
+		var tex: Texture2D = load(path)
+		if tex:
+			return tex.get_image()
+	var img := Image.new()
+	var abs_path := ProjectSettings.globalize_path(path)
+	if img.load(abs_path) == OK:
+		return img
+	push_warning("placeholder_tileset: could not load %s" % path)
+	return null

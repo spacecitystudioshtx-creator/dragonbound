@@ -34,6 +34,16 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	## Freeze movement unless the game is in the OVERWORLD mode.
+	## (Dialog / Battle / Menu / Transition all suspend walking.)
+	if GameMode and GameMode.current() != GameMode.Mode.OVERWORLD:
+		if is_moving:
+			## Finish the current step then stop.
+			_move_toward_target(delta)
+		else:
+			_play_idle()
+		return
+
 	if is_moving:
 		_move_toward_target(delta)
 	else:

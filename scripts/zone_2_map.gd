@@ -22,23 +22,37 @@ func _ready() -> void:
 
 
 func _build_map() -> void:
-	var src := 0
+	var src := MapTiles.SRC_GROUND
 
+	## Ground fill
 	for x in MAP_W:
 		for y in MAP_H:
-			# Ground: mostly alternate grass for visual difference
-			var grass_type := Vector2i(1, 0) if (x + y) % 3 != 0 else Vector2i(0, 0)
-			ground_layer.set_cell(Vector2i(x, y), src, grass_type)
+			var gt: Vector2i = MapTiles.GRASS_ALT if (x + y) % 3 != 0 else MapTiles.GRASS
+			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
-			# Border trees (gap on left for entrance)
-			var is_border := x == 0 or y == 0 or x == MAP_W - 1 or y == MAP_H - 1
-			var is_entrance := x == 0 and y >= 9 and y <= 11
-			if is_border and not is_entrance:
-				obstacle_layer.set_cell(Vector2i(x, y), src, Vector2i(2, 0))
+	## Border trees (pair-stamped); leave a 3-row entrance on the west
+	var west_entrance := range(9, 12)
+	for x in range(0, MAP_W, 2):
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, 0, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, MAP_H - 2, ground_layer, obstacle_layer)
+	for y in range(0, MAP_H, 2):
+		if not (y in west_entrance):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, y, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, y, ground_layer, obstacle_layer)
 
-	# Path from entrance
-	for x in range(0, 10):
-		ground_layer.set_cell(Vector2i(x, 10), src, Vector2i(3, 0))
+	## Path from entrance across the zone
+	for x in range(0, MAP_W - 2):
+		_set_ground(x, 10, MapTiles.DIRT_PATH)
+
+	## Scattered decorations
+	MapTiles.stamp(MapTiles.PROP_TREE_BIG, 6, 4, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 14, 14, ground_layer, obstacle_layer)
+	obstacle_layer.set_cell(Vector2i(4, 14), src, MapTiles.ROCK)
+	obstacle_layer.set_cell(Vector2i(13, 6), src, MapTiles.STUMP)
+
+
+func _set_ground(x: int, y: int, tile: Vector2i) -> void:
+	ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, tile)
 
 
 func _setup_camera_bounds() -> void:

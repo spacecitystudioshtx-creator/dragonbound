@@ -1,139 +1,176 @@
-## Autoloaded singleton. Holds all static drake species and move definitions.
+## Autoloaded singleton. Holds all drake species + move definitions, loaded
+## from res://data/ JSON files. Public API is unchanged so existing battle
+## code keeps working.
 ##
 ## Usage:
-##   DrakeDatabase.drakes["ember"]          → DrakeData
-##   DrakeDatabase.make_drake("flick", 4)   → DrakeInstance at level 4
-##   DrakeDatabase.get_combo_move(0, 1)     → MoveData for Fire+Water combo
+##   DrakeDatabase.drakes["ember"]        → DrakeData
+##   DrakeDatabase.moves["spark_snap"]    → MoveData (new accessor)
+##   DrakeDatabase.make_drake("flick", 4) → DrakeInstance at level 4
+##   DrakeDatabase.get_combo_move(0, 1)   → MoveData for Fire+Water combo
+##   DrakeDatabase.type_effectiveness(att_type, def_type) → float multiplier
 
 extends Node
 
-## All drake species, keyed by lowercase ID string
-var drakes: Dictionary = {}
+const DRAKES_PATH    := "res://data/drakes.json"
+const MOVES_PATH     := "res://data/moves.json"
+const TYPES_PATH     := "res://data/types.json"
+const SYNERGIES_PATH := "res://data/synergies.json"
 
-## Combo moves keyed by "minType_maxType" (uses DrakeData.Type enum ints)
+## All drake species, keyed by lowercase ID string.
+var drakes: Dictionary = {}
+## All moves, keyed by lowercase ID string.
+var moves: Dictionary = {}
+## Combo moves keyed by "minType_maxType" (DrakeData.Type ints, legacy format).
 var combo_moves: Dictionary = {}
+## Type effectiveness chart: chart[attacker][defender] → float.
+var _type_chart: Dictionary = {}
+
+
+## String → int maps for translating JSON enum names.
+const _MOVE_TYPE := {
+	"fire": MoveData.Type.FIRE,
+	"water": MoveData.Type.WATER,
+	"nature": MoveData.Type.NATURE,
+	"normal": MoveData.Type.NORMAL,
+}
+
+const _DRAKE_TYPE := {
+	"fire": DrakeData.Type.FIRE,
+	"water": DrakeData.Type.WATER,
+	"nature": DrakeData.Type.NATURE,
+}
+
+const _DRAKE_CLASS := {
+	"true_dragon": DrakeData.DrakeClass.TRUE_DRAGON,
+	"leviathan":   DrakeData.DrakeClass.LEVIATHAN,
+	"beast":       DrakeData.DrakeClass.BEAST,
+}
+
+const _EFFECT := {
+	"none":             MoveData.Effect.NONE,
+	"lower_accuracy":   MoveData.Effect.LOWER_ACCURACY,
+	"raise_defense":    MoveData.Effect.RAISE_DEFENSE,
+	"reflect_damage":   MoveData.Effect.REFLECT_DAMAGE,
+	"raise_evasion":    MoveData.Effect.RAISE_EVASION,
+	"burn_dot":         MoveData.Effect.BURN_DOT,
+	"trap":             MoveData.Effect.TRAP,
+	"block_bench":      MoveData.Effect.BLOCK_BENCH,
+	"heal_self":        MoveData.Effect.HEAL_SELF,
+	"heal_team":        MoveData.Effect.HEAL_TEAM,
+	"ignore_def_buffs": MoveData.Effect.IGNORE_DEF_BUFFS,
+	"self_damage":      MoveData.Effect.SELF_DAMAGE,
+	"fortify":          MoveData.Effect.FORTIFY,
+	"flood":            MoveData.Effect.FLOOD,
+}
 
 
 func _ready() -> void:
-	_init_database()
+	_load_all()
 
 
-func _init_database() -> void:
-	# ── Moves ────────────────────────────────────────────────────────────────
-	# Ember line
-	var spark_snap    := MoveData.new("Spark Snap",   MoveData.Type.FIRE,   35, 100)
-	var smoke_screen  := MoveData.new("Smoke Screen", MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.LOWER_ACCURACY, 0.2, "Lowers enemy accuracy 20%.")
-	var tail_whip     := MoveData.new("Tail Whip",    MoveData.Type.NORMAL, 30, 100)
-	var flame_rush    := MoveData.new("Flame Rush",   MoveData.Type.FIRE,   60,  90)
-	var ash_cloud     := MoveData.new("Ash Cloud",    MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.LOWER_ACCURACY, 0.3, "Lowers enemy accuracy 30%.")
-	var meltdown      := MoveData.new("Meltdown",     MoveData.Type.FIRE,   90,  80,
-			MoveData.Effect.SELF_DAMAGE, 0.1, "Massive blast. User takes 10% recoil.")
-	var molten_armor  := MoveData.new("Molten Armor", MoveData.Type.FIRE,    0, 100,
-			MoveData.Effect.REFLECT_DAMAGE, 0.0, "Raises defense. Reflects contact damage.")
+func _load_all() -> void:
+	_load_moves()
+	_load_drakes()
+	_load_types()
+	_load_synergies()
 
-	# Ripple line
-	var splash_bite   := MoveData.new("Splash Bite",    MoveData.Type.WATER,  35, 100)
-	var slick_dodge   := MoveData.new("Slick Dodge",    MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.RAISE_EVASION, 0.2, "Adds 20% dodge chance.")
-	var headbutt      := MoveData.new("Headbutt",       MoveData.Type.NORMAL, 30, 100)
-	var riptide       := MoveData.new("Riptide",        MoveData.Type.WATER,  50,  90,
-			MoveData.Effect.TRAP, 2.0, "Pulls enemy in. Can't change bench target.")
-	var pressure_wave := MoveData.new("Pressure Wave",  MoveData.Type.NORMAL, 50, 100)
-	var abyssal_crush := MoveData.new("Abyssal Crush",  MoveData.Type.WATER,  80,  85,
-			MoveData.Effect.IGNORE_DEF_BUFFS, 0.0, "Ignores enemy defense buffs.")
-	var drown_out     := MoveData.new("Drown Out",      MoveData.Type.WATER,   0, 100,
-			MoveData.Effect.BLOCK_BENCH, 2.0, "Blocks enemy bench combo for 2 turns.")
 
-	# Sprig line
-	var vine_lash   := MoveData.new("Vine Lash",   MoveData.Type.NATURE, 35, 100)
-	var harden      := MoveData.new("Harden",       MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.RAISE_DEFENSE, 0.3, "Boosts defense 30%.")
-	var pebble_toss := MoveData.new("Pebble Toss",  MoveData.Type.NORMAL, 30,  95)
-	var stone_wall  := MoveData.new("Stone Wall",   MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.REFLECT_DAMAGE, 0.0, "Raises defense. Reflects contact damage.")
-	var root_snare  := MoveData.new("Root Snare",   MoveData.Type.NATURE,  0,  90,
-			MoveData.Effect.TRAP, 1.0, "Traps enemy for 1 turn.")
-	var quake_bloom := MoveData.new("Quake Bloom",  MoveData.Type.NATURE, 75,  85)
-	var fortress    := MoveData.new("Fortress",     MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.FORTIFY, 0.6, "Massive defense boost. Can't attack next turn.")
+## ── Loaders ──────────────────────────────────────────────────────────────────
 
-	# Fodder moves
-	var ember_bite  := MoveData.new("Ember Bite",  MoveData.Type.FIRE,   30, 100)
-	var scratch     := MoveData.new("Scratch",     MoveData.Type.NORMAL, 25, 100)
-	var leaflet     := MoveData.new("Leaflet",     MoveData.Type.NATURE, 30, 100)
-	var growl       := MoveData.new("Growl",       MoveData.Type.NORMAL,  0, 100,
-			MoveData.Effect.LOWER_ACCURACY, 0.1)
-	var water_gun   := MoveData.new("Water Gun",   MoveData.Type.WATER,  30, 100)
-	var splash_atk  := MoveData.new("Splash",      MoveData.Type.NORMAL, 25, 100)
+func _load_json(path: String) -> Dictionary:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		push_error("DrakeDatabase: could not read %s" % path)
+		return {}
+	var txt := f.get_as_text()
+	var parsed: Variant = JSON.parse_string(txt)
+	if parsed == null or typeof(parsed) != TYPE_DICTIONARY:
+		push_error("DrakeDatabase: invalid JSON in %s" % path)
+		return {}
+	return parsed
 
-	# ── Drake species ─────────────────────────────────────────────────────────
-	# Starters — catch_rate 45 (hard to catch, like Pokémon starters)
-	drakes["ember"] = DrakeData.new("Ember", DrakeData.Type.FIRE, DrakeData.DrakeClass.TRUE_DRAGON,
-			45, 35, 30, 32,  45, 16, "scornn")
-	drakes["ember"].base_moves = [spark_snap, smoke_screen, tail_whip]
 
-	drakes["scornn"] = DrakeData.new("Scornn", DrakeData.Type.FIRE, DrakeData.DrakeClass.TRUE_DRAGON,
-			55, 48, 40, 42,  45, 36, "ashvane")
-	drakes["scornn"].base_moves = [spark_snap, flame_rush, ash_cloud]
+func _load_moves() -> void:
+	var j := _load_json(MOVES_PATH)
+	var raw: Dictionary = j.get("moves", {})
+	for id in raw.keys():
+		moves[id] = _parse_move(raw[id])
 
-	drakes["ashvane"] = DrakeData.new("Ashvane", DrakeData.Type.FIRE, DrakeData.DrakeClass.TRUE_DRAGON,
-			70, 65, 55, 55,  45)
-	drakes["ashvane"].base_moves = [flame_rush, meltdown, molten_armor]
 
-	drakes["ripple"] = DrakeData.new("Ripple", DrakeData.Type.WATER, DrakeData.DrakeClass.LEVIATHAN,
-			42, 32, 35, 40,  45, 16, "undertow")
-	drakes["ripple"].base_moves = [splash_bite, slick_dodge, headbutt]
+func _parse_move(d: Dictionary) -> MoveData:
+	var type_id: int = _MOVE_TYPE.get(d.get("type", "normal"), MoveData.Type.NORMAL)
+	var effect_id: int = _EFFECT.get(d.get("effect", "none"), MoveData.Effect.NONE)
+	return MoveData.new(
+		d.get("name", "?"),
+		type_id,
+		int(d.get("power", 0)),
+		int(d.get("accuracy", 100)),
+		effect_id,
+		float(d.get("effect_value", 0.0)),
+		d.get("description", "")
+	)
 
-	drakes["undertow"] = DrakeData.new("Undertow", DrakeData.Type.WATER, DrakeData.DrakeClass.LEVIATHAN,
-			52, 45, 45, 55,  45, 36, "tidewrath")
-	drakes["undertow"].base_moves = [splash_bite, riptide, pressure_wave]
 
-	drakes["tidewrath"] = DrakeData.new("Tidewrath", DrakeData.Type.WATER, DrakeData.DrakeClass.LEVIATHAN,
-			65, 60, 60, 70,  45)
-	drakes["tidewrath"].base_moves = [riptide, abyssal_crush, drown_out]
+func _load_drakes() -> void:
+	var j := _load_json(DRAKES_PATH)
+	var raw: Dictionary = j.get("drakes", {})
+	for id in raw.keys():
+		var d: Dictionary = raw[id]
+		var type_id: int = _DRAKE_TYPE.get(d.get("type", "fire"), DrakeData.Type.FIRE)
+		var class_id: int = _DRAKE_CLASS.get(d.get("class", "beast"), DrakeData.DrakeClass.BEAST)
+		var stats: Dictionary = d.get("base_stats", {})
+		var evo: Dictionary = d.get("evolution", {}) if d.get("evolution") != null else {}
+		var evo_level := int(evo.get("level", 0))
+		var evo_id: String = evo.get("to", "")
 
-	drakes["sprig"] = DrakeData.new("Sprig", DrakeData.Type.NATURE, DrakeData.DrakeClass.BEAST,
-			48, 30, 40, 28,  45, 16, "thicket")
-	drakes["sprig"].base_moves = [vine_lash, harden, pebble_toss]
+		var drake := DrakeData.new(
+			d.get("name", id.capitalize()),
+			type_id,
+			class_id,
+			int(stats.get("hp",  30)),
+			int(stats.get("atk", 25)),
+			int(stats.get("def", 25)),
+			int(stats.get("spd", 40)),
+			int(d.get("catch_rate", 128)),
+			evo_level,
+			evo_id
+		)
+		var move_ids: Array = d.get("base_moves", [])
+		var resolved: Array = []
+		for mid in move_ids:
+			if moves.has(mid):
+				resolved.append(moves[mid])
+			else:
+				push_warning("DrakeDatabase: drake '%s' references unknown move '%s'" % [id, mid])
+		drake.base_moves = resolved
+		drakes[id] = drake
 
-	drakes["thicket"] = DrakeData.new("Thicket", DrakeData.Type.NATURE, DrakeData.DrakeClass.BEAST,
-			60, 42, 58, 35,  45, 36, "ironbark")
-	drakes["thicket"].base_moves = [vine_lash, stone_wall, root_snare]
 
-	drakes["ironbark"] = DrakeData.new("Ironbark", DrakeData.Type.NATURE, DrakeData.DrakeClass.BEAST,
-			78, 55, 78, 40,  45)
-	drakes["ironbark"].base_moves = [stone_wall, quake_bloom, fortress]
+func _load_types() -> void:
+	var j := _load_json(TYPES_PATH)
+	_type_chart = j.get("chart", {})
 
-	# Fodder — catch_rate 150 (easy to catch)
-	drakes["flick"] = DrakeData.new("Flick", DrakeData.Type.FIRE,   DrakeData.DrakeClass.BEAST,
-			32, 28, 22, 30,  150)
-	drakes["flick"].base_moves = [ember_bite, scratch]
 
-	drakes["tuft"] = DrakeData.new("Tuft", DrakeData.Type.NATURE, DrakeData.DrakeClass.BEAST,
-			35, 22, 28, 25,  150)
-	drakes["tuft"].base_moves = [leaflet, growl]
+func _load_synergies() -> void:
+	var j := _load_json(SYNERGIES_PATH)
+	var combos: Dictionary = j.get("combos", {})
+	for key in combos.keys():
+		## key format: "fire+water" — convert to int tuple key used by
+		## get_combo_move(active_type, bench_type).
+		var parts := String(key).split("+")
+		if parts.size() != 2:
+			continue
+		var a: int = _MOVE_TYPE.get(parts[0], -1)
+		var b: int = _MOVE_TYPE.get(parts[1], -1)
+		if a == -1 or b == -1:
+			continue
+		## Use DrakeData.Type convention (FIRE=0, WATER=1, NATURE=2).
+		## MoveData.Type enum numbers match for fire/water/nature.
+		var int_key := "%d_%d" % [mini(a, b), maxi(a, b)]
+		combo_moves[int_key] = _parse_move(combos[key])
 
-	drakes["gulp"] = DrakeData.new("Gulp", DrakeData.Type.WATER,  DrakeData.DrakeClass.BEAST,
-			33, 25, 30, 28,  150)
-	drakes["gulp"].base_moves = [water_gun, splash_atk]
 
-	# ── Combo moves ──────────────────────────────────────────────────────────
-	# Key: "minType_maxType" using DrakeData.Type ints (FIRE=0, WATER=1, NATURE=2)
-	combo_moves["0_0"] = MoveData.new("Eruption",    MoveData.Type.FIRE,   90, 80,
-			MoveData.Effect.NONE, 0.0, "Pure power fire nuke.")
-	combo_moves["0_1"] = MoveData.new("Steam Burst", MoveData.Type.FIRE,   50, 90,
-			MoveData.Effect.LOWER_ACCURACY, 0.2, "Damage + drops enemy accuracy.")
-	combo_moves["0_2"] = MoveData.new("Wildfire",    MoveData.Type.FIRE,   40, 95,
-			MoveData.Effect.BURN_DOT, 0.0, "Inflicts a burning DoT on the enemy.")
-	combo_moves["1_1"] = MoveData.new("Flood Surge", MoveData.Type.WATER,  70, 90,
-			MoveData.Effect.FLOOD, 0.0, "Removes all enemy stat buffs.")
-	combo_moves["1_2"] = MoveData.new("Overgrowth",  MoveData.Type.NATURE,  0, 100,
-			MoveData.Effect.HEAL_SELF, 0.4, "Heals active drake 40% max HP.")
-	combo_moves["2_2"] = MoveData.new("Deep Roots",  MoveData.Type.NATURE,  0, 100,
-			MoveData.Effect.HEAL_TEAM, 0.1, "Heals all party drakes 10% max HP.")
-
+## ── Public API ───────────────────────────────────────────────────────────────
 
 ## Returns the combo MoveData for the given active + bench drake types.
 func get_combo_move(active_type: int, bench_type: int) -> MoveData:
@@ -147,3 +184,9 @@ func make_drake(id: String, lv: int = 5) -> DrakeInstance:
 		push_error("DrakeDatabase: unknown id '%s'" % id)
 		return null
 	return DrakeInstance.new(drakes[id], lv)
+
+
+## Type-effectiveness multiplier. Types as strings ("fire", "water", ...).
+func type_effectiveness(attacker: String, defender: String) -> float:
+	var row: Dictionary = _type_chart.get(attacker, {})
+	return float(row.get(defender, 1.0))

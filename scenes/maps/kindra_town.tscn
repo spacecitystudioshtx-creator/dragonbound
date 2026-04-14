@@ -20,15 +20,15 @@ script = ExtResource("1_map")
 [node name="ObstacleLayer" type="TileMapLayer" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(136, 424)
+position = Vector2(168, 360)
 
 [node name="ExitToDustway" type="Area2D" parent="."]
-position = Vector2(472, 232)
+position = Vector2(568, 248)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
 target_scene = "res://scenes/maps/dustway_route.tscn"
-spawn_position = Vector2(24, 632)
+spawn_position = Vector2(24, 656)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitToDustway"]
 shape = SubResource("exit_east")
@@ -43,7 +43,7 @@ level_max = 3
 encounter_rate = 0.08
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GardenEncounter"]
-position = Vector2(208, 376)
+position = Vector2(240, 392)
 shape = SubResource("garden_grass")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]

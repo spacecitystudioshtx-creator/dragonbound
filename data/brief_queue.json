@@ -1,0 +1,21 @@
+{
+  "_schema_version": 1,
+  "_doc": "Creative-brief queue for the nightly AFK content pipeline. User adds briefs during the day; the overnight scheduled task processes them one at a time using the generate-* skills. Set 'status' to 'pending' for new items; the pipeline flips them to 'done' or 'failed'.",
+  "briefs": [
+    {
+      "id": "example-do-not-process",
+      "kind": "drake",
+      "status": "example",
+      "prompt": "A brooding shadow wyrm from the Scald's depths. Evolves into a larger form called the Ember Revenant. Dark grey with red ember cracks along its spine."
+    }
+  ],
+  "instructions_for_user": [
+    "Add entries to 'briefs' with:",
+    "  - id: a short kebab-case identifier for the brief",
+    "  - kind: one of 'drake' | 'zone' | 'dialog'",
+    "  - status: 'pending'",
+    "  - prompt: the creative brief text — as short or detailed as you want",
+    "The overnight task will process entries where status == 'pending' one by one,",
+    "updating status and appending generated content to data/."
+  ]
+}

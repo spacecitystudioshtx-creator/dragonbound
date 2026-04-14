@@ -1,0 +1,12 @@
+{
+  "_schema_version": 1,
+  "_doc": "Type effectiveness chart. 'attacker' row shows multipliers vs defender types. 'none' = no modifier (defaults to 1.0). 'normal' never gets bonuses.",
+  "types": ["fire", "water", "nature", "normal"],
+  "rare_types": ["void", "celestial", "ancient", "spirit", "crystal", "blood"],
+  "chart": {
+    "fire":   {"fire": 0.5, "water": 0.5, "nature": 2.0, "normal": 1.0},
+    "water":  {"fire": 2.0, "water": 0.5, "nature": 0.5, "normal": 1.0},
+    "nature": {"fire": 0.5, "water": 2.0, "nature": 0.5, "normal": 1.0},
+    "normal": {"fire": 1.0, "water": 1.0, "nature": 1.0, "normal": 1.0}
+  }
+}

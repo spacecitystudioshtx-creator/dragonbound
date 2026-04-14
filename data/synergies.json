@@ -1,0 +1,16 @@
+{
+  "_schema_version": 1,
+  "_doc": "Bench-combo moves. Key = two types alphabetically sorted + joined by '+'. Inline move shape matches moves.json entries.",
+  "combos": {
+    "fire+fire":     {"name": "Eruption",     "type": "fire",   "power": 90, "accuracy": 80, "effect": "none",           "description": "Pure power fire nuke."},
+    "fire+water":    {"name": "Steam Burst",  "type": "fire",   "power": 50, "accuracy": 90, "effect": "lower_accuracy", "effect_value": 0.2, "description": "Damage + drops enemy accuracy."},
+    "fire+nature":   {"name": "Wildfire",     "type": "fire",   "power": 40, "accuracy": 95, "effect": "burn_dot",       "description": "Inflicts a burning DoT on the enemy."},
+    "water+water":   {"name": "Flood Surge",  "type": "water",  "power": 70, "accuracy": 90, "effect": "flood",          "description": "Removes all enemy stat buffs."},
+    "nature+water":  {"name": "Overgrowth",   "type": "nature", "power":  0, "accuracy": 100, "effect": "heal_self",     "effect_value": 0.4, "description": "Heals active drake 40% max HP."},
+    "nature+nature": {"name": "Deep Roots",   "type": "nature", "power":  0, "accuracy": 100, "effect": "heal_team",     "effect_value": 0.1, "description": "Heals all party drakes 10% max HP."}
+  },
+  "_passive_bonuses_todo": {
+    "three_wyrms":  {"condition": {"class_count": {"leviathan": 3}}, "effect": "speed_buff", "effect_value": 0.15, "description": "3 Leviathans on team: +15% speed to all."},
+    "three_beasts": {"condition": {"class_count": {"beast": 3}},      "effect": "atk_buff",   "effect_value": 0.10, "description": "3 Beasts on team: +10% attack to all."}
+  }
+}
