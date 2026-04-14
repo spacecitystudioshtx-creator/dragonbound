@@ -1,0 +1,36 @@
+{
+  "_schema_version": 1,
+  "_doc": "All move definitions. Keys are move_ids used by drakes.json base_moves and learnsets.",
+  "moves": {
+    "spark_snap":    {"name": "Spark Snap",    "type": "fire",   "power": 35, "accuracy": 100, "effect": "none"},
+    "smoke_screen":  {"name": "Smoke Screen",  "type": "normal", "power":  0, "accuracy": 100, "effect": "lower_accuracy", "effect_value": 0.2, "description": "Lowers enemy accuracy 20%."},
+    "tail_whip":     {"name": "Tail Whip",     "type": "normal", "power": 30, "accuracy": 100, "effect": "none"},
+    "flame_rush":    {"name": "Flame Rush",    "type": "fire",   "power": 60, "accuracy":  90, "effect": "none"},
+    "ash_cloud":     {"name": "Ash Cloud",     "type": "normal", "power":  0, "accuracy": 100, "effect": "lower_accuracy", "effect_value": 0.3, "description": "Lowers enemy accuracy 30%."},
+    "meltdown":      {"name": "Meltdown",      "type": "fire",   "power": 90, "accuracy":  80, "effect": "self_damage",    "effect_value": 0.1, "description": "Massive blast. User takes 10% recoil."},
+    "molten_armor":  {"name": "Molten Armor",  "type": "fire",   "power":  0, "accuracy": 100, "effect": "reflect_damage", "description": "Raises defense. Reflects contact damage."},
+
+    "splash_bite":   {"name": "Splash Bite",   "type": "water",  "power": 35, "accuracy": 100, "effect": "none"},
+    "slick_dodge":   {"name": "Slick Dodge",   "type": "normal", "power":  0, "accuracy": 100, "effect": "raise_evasion", "effect_value": 0.2, "description": "Adds 20% dodge chance."},
+    "headbutt":      {"name": "Headbutt",      "type": "normal", "power": 30, "accuracy": 100, "effect": "none"},
+    "riptide":       {"name": "Riptide",       "type": "water",  "power": 50, "accuracy":  90, "effect": "trap",          "effect_value": 2.0, "description": "Pulls enemy in. Can't change bench target."},
+    "pressure_wave": {"name": "Pressure Wave", "type": "normal", "power": 50, "accuracy": 100, "effect": "none"},
+    "abyssal_crush": {"name": "Abyssal Crush", "type": "water",  "power": 80, "accuracy":  85, "effect": "ignore_def_buffs", "description": "Ignores enemy defense buffs."},
+    "drown_out":     {"name": "Drown Out",     "type": "water",  "power":  0, "accuracy": 100, "effect": "block_bench",   "effect_value": 2.0, "description": "Blocks enemy bench combo for 2 turns."},
+
+    "vine_lash":     {"name": "Vine Lash",     "type": "nature", "power": 35, "accuracy": 100, "effect": "none"},
+    "harden":        {"name": "Harden",        "type": "normal", "power":  0, "accuracy": 100, "effect": "raise_defense", "effect_value": 0.3, "description": "Boosts defense 30%."},
+    "pebble_toss":   {"name": "Pebble Toss",   "type": "normal", "power": 30, "accuracy":  95, "effect": "none"},
+    "stone_wall":    {"name": "Stone Wall",    "type": "normal", "power":  0, "accuracy": 100, "effect": "reflect_damage", "description": "Raises defense. Reflects contact damage."},
+    "root_snare":    {"name": "Root Snare",    "type": "nature", "power":  0, "accuracy":  90, "effect": "trap",          "effect_value": 1.0, "description": "Traps enemy for 1 turn."},
+    "quake_bloom":   {"name": "Quake Bloom",   "type": "nature", "power": 75, "accuracy":  85, "effect": "none"},
+    "fortress":      {"name": "Fortress",      "type": "normal", "power":  0, "accuracy": 100, "effect": "fortify",       "effect_value": 0.6, "description": "Massive defense boost. Can't attack next turn."},
+
+    "ember_bite":    {"name": "Ember Bite",    "type": "fire",   "power": 30, "accuracy": 100, "effect": "none"},
+    "scratch":       {"name": "Scratch",       "type": "normal", "power": 25, "accuracy": 100, "effect": "none"},
+    "leaflet":       {"name": "Leaflet",       "type": "nature", "power": 30, "accuracy": 100, "effect": "none"},
+    "growl":         {"name": "Growl",         "type": "normal", "power":  0, "accuracy": 100, "effect": "lower_accuracy", "effect_value": 0.1},
+    "water_gun":     {"name": "Water Gun",     "type": "water",  "power": 30, "accuracy": 100, "effect": "none"},
+    "splash":        {"name": "Splash",        "type": "normal", "power": 25, "accuracy": 100, "effect": "none"}
+  }
+}

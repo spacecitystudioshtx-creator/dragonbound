@@ -1,0 +1,33 @@
+{
+  "_schema_version": 1,
+  "_doc": "NPC dialog trees for Kindra town. Each key is an NPC id. A dialog is an array of nodes; each node is either a string (text line) or an object {text, choices: [{label, next}], set_flag, check_flag}.",
+  "npcs": {
+    "elder_moss": {
+      "name": "Elder Moss",
+      "intro": [
+        "The fire in your bones draws you to the Pyre, young one.",
+        "Take this drake. Its kind has chosen you.",
+        {"set_flag": "starter_given"},
+        "Walk with it. Return when you have tested its spirit on the Dustway."
+      ],
+      "post_starter": [
+        "The Dustway stretches east. Watch the grass — wild drakes hide there.",
+        "When you have faced Warden Brask at the Scald, come back and the north gate will open."
+      ]
+    },
+    "rival_sable": {
+      "name": "Sable",
+      "first_meeting": [
+        "So the old man gave you one too.",
+        "Don't think that makes us friends. I'll beat you to the Scald.",
+        {"start_battle": "rival_sable_1"}
+      ]
+    },
+    "sign_east": {
+      "text": "DUSTWAY ROUTE 1 →  Keep to the path. Tall grass stirs."
+    },
+    "sign_north": {
+      "text": "THE SCALD — Warden Brask's domain.  Closed until proven."
+    }
+  }
+}

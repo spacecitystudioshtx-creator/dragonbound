@@ -71,3 +71,7 @@ func set_flag(key: String, value: Variant = true) -> void:
 
 func get_flag(key: String, default: Variant = false) -> Variant:
 	return flags.get(key, default)
+
+
+func get_all_flags() -> Dictionary:
+	return flags.duplicate()

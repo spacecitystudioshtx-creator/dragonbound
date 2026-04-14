@@ -1,0 +1,21 @@
+{
+  "_schema_version": 1,
+  "_doc": "Drake species. Starters catch_rate=45 (hard), fodder=150 (easy). base_moves are move_ids from moves.json.",
+  "drakes": {
+    "ember":     {"name": "Ember",     "type": "fire",   "class": "true_dragon", "base_stats": {"hp": 35, "atk": 30, "def": 32, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 16, "to": "scornn"},    "base_moves": ["spark_snap", "smoke_screen", "tail_whip"]},
+    "scornn":    {"name": "Scornn",    "type": "fire",   "class": "true_dragon", "base_stats": {"hp": 55, "atk": 48, "def": 40, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 36, "to": "ashvane"},   "base_moves": ["spark_snap", "flame_rush", "ash_cloud"]},
+    "ashvane":   {"name": "Ashvane",   "type": "fire",   "class": "true_dragon", "base_stats": {"hp": 70, "atk": 65, "def": 55, "spd": 45}, "catch_rate": 45,  "evolution": null,                              "base_moves": ["flame_rush", "meltdown", "molten_armor"]},
+
+    "ripple":    {"name": "Ripple",    "type": "water",  "class": "leviathan",   "base_stats": {"hp": 42, "atk": 32, "def": 35, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 16, "to": "undertow"},   "base_moves": ["splash_bite", "slick_dodge", "headbutt"]},
+    "undertow":  {"name": "Undertow",  "type": "water",  "class": "leviathan",   "base_stats": {"hp": 52, "atk": 45, "def": 45, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 36, "to": "tidewrath"},  "base_moves": ["splash_bite", "riptide", "pressure_wave"]},
+    "tidewrath": {"name": "Tidewrath", "type": "water",  "class": "leviathan",   "base_stats": {"hp": 65, "atk": 60, "def": 60, "spd": 45}, "catch_rate": 45,  "evolution": null,                              "base_moves": ["riptide", "abyssal_crush", "drown_out"]},
+
+    "sprig":     {"name": "Sprig",     "type": "nature", "class": "beast",       "base_stats": {"hp": 48, "atk": 30, "def": 40, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 16, "to": "thicket"},    "base_moves": ["vine_lash", "harden", "pebble_toss"]},
+    "thicket":   {"name": "Thicket",   "type": "nature", "class": "beast",       "base_stats": {"hp": 60, "atk": 42, "def": 58, "spd": 45}, "catch_rate": 45,  "evolution": {"level": 36, "to": "ironbark"},   "base_moves": ["vine_lash", "stone_wall", "root_snare"]},
+    "ironbark":  {"name": "Ironbark",  "type": "nature", "class": "beast",       "base_stats": {"hp": 78, "atk": 55, "def": 78, "spd": 45}, "catch_rate": 45,  "evolution": null,                              "base_moves": ["stone_wall", "quake_bloom", "fortress"]},
+
+    "flick":     {"name": "Flick",     "type": "fire",   "class": "beast",       "base_stats": {"hp": 32, "atk": 28, "def": 22, "spd": 45}, "catch_rate": 150, "evolution": null,                              "base_moves": ["ember_bite", "scratch"]},
+    "tuft":      {"name": "Tuft",      "type": "nature", "class": "beast",       "base_stats": {"hp": 35, "atk": 22, "def": 28, "spd": 45}, "catch_rate": 150, "evolution": null,                              "base_moves": ["leaflet", "growl"]},
+    "gulp":      {"name": "Gulp",      "type": "water",  "class": "beast",       "base_stats": {"hp": 33, "atk": 25, "def": 30, "spd": 45}, "catch_rate": 150, "evolution": null,                              "base_moves": ["water_gun", "splash"]}
+  }
+}
