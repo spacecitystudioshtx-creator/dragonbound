@@ -10,13 +10,13 @@
 size = Vector2(16, 48)
 
 [sub_resource type="RectangleShape2D" id="grass_south"]
-size = Vector2(240, 128)
+size = Vector2(272, 112)
 
 [sub_resource type="RectangleShape2D" id="grass_pond"]
 size = Vector2(80, 64)
 
 [sub_resource type="RectangleShape2D" id="grass_north"]
-size = Vector2(272, 96)
+size = Vector2(288, 96)
 
 [node name="DustwayRoute" type="Node2D"]
 script = ExtResource("1_map")
@@ -26,15 +26,15 @@ script = ExtResource("1_map")
 [node name="ObstacleLayer" type="TileMapLayer" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(24, 632)
+position = Vector2(184, 656)
 
 [node name="ExitToKindra" type="Area2D" parent="."]
-position = Vector2(4, 632)
+position = Vector2(4, 656)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
 target_scene = "res://scenes/maps/kindra_town.tscn"
-spawn_position = Vector2(456, 232)
+spawn_position = Vector2(552, 248)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitToKindra"]
 shape = SubResource("exit_west")
@@ -49,7 +49,7 @@ level_max = 5
 encounter_rate = 0.15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZoneSouth"]
-position = Vector2(160, 488)
+position = Vector2(184, 520)
 shape = SubResource("grass_south")
 
 [node name="GrassZonePond" type="Area2D" parent="."]
@@ -62,7 +62,7 @@ level_max = 6
 encounter_rate = 0.15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZonePond"]
-position = Vector2(232, 344)
+position = Vector2(248, 376)
 shape = SubResource("grass_pond")
 
 [node name="GrassZoneNorth" type="Area2D" parent="."]
@@ -75,7 +75,7 @@ level_max = 7
 encounter_rate = 0.18
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="GrassZoneNorth"]
-position = Vector2(160, 152)
+position = Vector2(176, 176)
 shape = SubResource("grass_north")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
