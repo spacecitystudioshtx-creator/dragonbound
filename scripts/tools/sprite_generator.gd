@@ -1,20 +1,51 @@
 ## Sprite Generator Tool — generates all drake battle sprites via the
 ## HuggingFace Inference API (free tier, model: nerijs/pixel-art-xl).
 ##
+## TARGET STYLE: GBA Pokémon FireRed/LeafGreen battle sprites.
+##   Bold black outlines, flat cell shading (no gradients), limited GBA palette,
+##   chunky readable pixels, 3/4 front-facing bipedal dragon stance, black BG.
+##   Reference: the official Gen-3 Pokémon battle sprite aesthetic.
+##
 ## Usage:
 ##   1. Get a free token at https://huggingface.co/settings/tokens (read scope)
 ##   2. Run this scene (set as main or F6)
-##   3. Paste token, click Generate
-##   4. Sprites save to res://art/drakes/ — existing files are skipped
+##   3. Paste token, click Generate All
+##   4. Sprites save to res://art/drakes/ — existing files are SKIPPED.
+##      Delete a file first if you want to re-generate it.
+##   5. Restart Godot after generation so the import system picks up the PNGs.
 ##
-## After generation, restart Godot so the import system picks up the PNGs.
-## The battle scene auto-detects and uses them (falls back to colored rects).
+## The battle scene auto-detects the PNGs; falls back to colored rects if missing.
+##
+## Style notes for future drakes:
+##   - Lead with body color(s): "dark navy blue scales, cream underbelly"
+##   - Name the wing type explicitly: "large red membranous bat wings"
+##   - Include eye color: "glowing red eyes" / "amber eyes"
+##   - Describe silhouette features: spikes, horns, fins, tail shape
+##   - Keep the build human-readable: "stocky bipedal hatchling", "apex predator stance"
+##   - Avoid vague adjectives ("cool", "awesome") — describe shapes and colors only
 
 extends Node2D
 
-const API_URL := "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
-const TARGET_SIZE := Vector2i(64, 64)
-const NEG_PROMPT := "blurry, realistic, 3d render, photograph, multiple creatures, text, watermark, low quality, deformed"
+## nerijs/pixel-art-xl is fine-tuned specifically for pixel art.
+## Its trigger word "pixel_art" is prepended to every prompt automatically.
+const API_URL    := "https://router.huggingface.co/hf-inference/models/nerijs/pixel-art-xl"
+const TARGET_SIZE := Vector2i(80, 80)   ## stored at 80×80; battle scene displays at 52×52
+
+## Style prefix injected into every prompt — defines the FireRed aesthetic.
+const STYLE_PREFIX := (
+	"pixel_art, GBA Game Boy Advance pokemon FireRed official battle sprite, "
+	+ "bold black outline, flat cell shading no gradients, limited 32 color GBA palette, "
+	+ "front 3/4 view facing viewer, single bipedal dragon creature centered, "
+	+ "pure black background, chunky readable pixels, gen 3 pokemon creature design, "
+)
+
+## What to actively exclude — keeps results clean and on-style.
+const NEG_PROMPT := (
+	"blurry, realistic, photograph, 3d render, smooth gradients, airbrushed, "
+	+ "anime style, chibi, too cute, multiple creatures, text, watermark, "
+	+ "washed out, pastel, white background, sketch, pencil, painterly, modern digital art, "
+	+ "overdetailed, noisy, jpeg artifacts, low quality, deformed"
+)
 
 var _token := ""
 var _sprites: Array = []
@@ -35,44 +66,92 @@ func _ready() -> void:
 # ──────────────────────────────────────────────────────────────────────────────
 
 func _build_sprite_list() -> void:
-	## Fire line
+	## ── Fire starter line ────────────────────────────────────────────────────
+	## Eye color rule:
+	##   Starters evos 1-2 + fodder → white sclera with colored pupils (FireRed style)
+	##   Final evolutions (Ashvane, Tidewrath, Ironbark) → solid black eyes (rarer/darker)
+
 	_add("ember",
-		"small fire dragon hatchling, orange red scales, small flame on tail tip, cute fierce look")
+		"small juvenile fire dragon hatchling, bright orange-red scales, "
+		+ "pale orange segmented underbelly, tiny crimson membranous bat wings, "
+		+ "flame-tipped tail, small ivory fangs and stubby horns, "
+		+ "white eyes with red pupils, stocky compact bipedal body, fierce starter pose")
+
 	_add("scornn",
-		"medium fire dragon, armored dark red scales, curved horns, small ember wings")
+		"medium fire dragon, deep blood-red and dark charcoal scales, "
+		+ "row of ivory spikes along spine and shoulders, swept-back curved horns, "
+		+ "dark ember-orange segmented underbelly, broad crimson bat wings, "
+		+ "heavy muscular clawed arms, white eyes with red pupils, aggressive stance")
+
 	_add("ashvane",
-		"large fire dragon, ashen gray and deep red scales, massive wings, volcanic energy")
+		"large volcanic fire dragon, dark charcoal slate-gray scales, "
+		+ "ashen cream segmented underbelly plates, massive dark crimson membranous bat wings, "
+		+ "crown of ivory spikes along head and spine, heavy muscular bipedal body, "
+		+ "solid black eyes, apex dragon predator stance")
 
-	## Water line
+	## ── Water starter line ───────────────────────────────────────────────────
 	_add("ripple",
-		"small water serpent, light blue scales, fin ears, cute aquatic creature")
+		"small aquatic dragon hatchling, bright sky-blue scales, "
+		+ "pale white segmented underbelly, fin-shaped ear crests, "
+		+ "white eyes with blue pupils, slim serpentine tail, tiny webbed claws, "
+		+ "sleek cute water starter body, gentle alert pose")
+
 	_add("undertow",
-		"medium sea serpent, deep blue scales, flowing fin crest, sleek aquatic body")
+		"medium sea dragon, deep ocean blue scales with teal highlights, "
+		+ "silver-white segmented underbelly, tall swept dorsal fin crest on head, "
+		+ "powerful flipper-clawed arms, sinuous muscular body, "
+		+ "white eyes with blue pupils, flowing ribbon tail fins, confident swimmer stance")
+
 	_add("tidewrath",
-		"large water leviathan dragon, dark blue and teal, massive jaws, tidal energy aura")
+		"large water leviathan dragon, dark midnight blue and deep teal armored scales, "
+		+ "massive armored lower jaw full of sharp fangs, crimson segmented underbelly, "
+		+ "enormous sweeping ocean fin wings, solid black eyes, "
+		+ "thick serpentine neck, heavy apex sea predator, imposing front stance")
 
-	## Nature line
+	## ── Nature starter line ──────────────────────────────────────────────────
 	_add("sprig",
-		"small plant creature, green leafy body, twig antlers, cute forest spirit")
-	_add("thicket",
-		"medium plant beast, bark armor plating, vine whips, forest guardian")
-	_add("ironbark",
-		"large tree golem, massive bark body, root legs, glowing amber eyes, ancient titan")
+		"small forest spirit dragon hatchling, bright leaf-green scales, "
+		+ "cream woody segmented underbelly, two branching twig antlers, "
+		+ "white eyes with amber pupils, small leaf-frond wings, vine-wrapped tail, "
+		+ "round compact cute plant hatchling body, curious upright pose")
 
-	## Fodder
+	_add("thicket",
+		"medium bark-armored forest dragon, dark mahogany brown bark plating, "
+		+ "forest-green moss patches between armor segments, white eyes with amber pupils, "
+		+ "vine whip forearms with thorn hooks, leaf-edged wings, "
+		+ "sturdy powerful guardian bipedal stance, nature protector")
+
+	_add("ironbark",
+		"large ancient tree golem dragon, very dark bark and stone-gray cracked body, "
+		+ "gnarled root-like legs and sweeping root tail, massive trunk torso, "
+		+ "solid black eyes under heavy stone brow ridge, "
+		+ "rough cracked bark scales with ivy and lichen patches, "
+		+ "towering ancient titan bipedal stance, awe-inspiring size")
+
+	## ── Common wild fodder ───────────────────────────────────────────────────
 	_add("flick",
-		"tiny quick lizard, gray green scales, alert darting eyes, small common creature")
+		"small quick common lizard drake, muddy grey-green scales, "
+		+ "pale beige underbelly, wide alert white eyes with yellow pupils, slender swift body, "
+		+ "long thin whip tail, tiny sharp claws, unassuming wild creature pose")
+
 	_add("tuft",
-		"small fluffy round creature, soft light fur, big curious eyes, common critter")
+		"small round fluffy common drake, cream and soft white fur, "
+		+ "round large white eyes with black pupils, stubby tiny limbs barely visible, "
+		+ "plump round balloon-like body, small folded pointed ears, "
+		+ "harmless endearing common critter pose")
+
 	_add("gulp",
-		"small toad creature, wide grinning mouth, green spotted bumpy skin, common critter")
+		"small squat toad drake, bumpy warty dark olive-green skin, "
+		+ "wide pale cream belly, enormous gaping tooth-lined mouth, "
+		+ "bulging round white eyes with yellow pupils on top of flat head, "
+		+ "short stubby powerful legs, hunched common swamp critter pose")
 
 
 func _add(id: String, desc: String) -> void:
 	_sprites.append({
-		"id": id,
-		"file": "res://art/drakes/" + id + "_front.png",
-		"prompt": "pixel art game sprite, " + desc + ", front facing, single creature, centered on canvas, clean black outline, fantasy RPG monster, solid color background",
+		"id":     id,
+		"file":   "res://art/drakes/" + id + "_front.png",
+		"prompt": STYLE_PREFIX + desc,
 	})
 
 

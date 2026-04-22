@@ -8,6 +8,8 @@ extends Node2D
 const TILE_SIZE := 16
 const MAP_W := 22
 const MAP_H := 48
+const NORTH_EXIT_COLS    := [10, 11, 12]   ## Col indices of north → The Scald opening
+const WEST_ENTRANCE_ROWS := [40, 41, 42]   ## Row indices of west ← Kindra entrance
 
 @onready var ground_layer: TileMapLayer = $GroundLayer
 @onready var obstacle_layer: TileMapLayer = $ObstacleLayer
@@ -19,6 +21,7 @@ func _ready() -> void:
 	ground_layer.tile_set = tileset
 	obstacle_layer.tile_set = tileset
 	_build_map()
+	_add_perimeter_walls()
 	_setup_camera_bounds()
 
 
@@ -31,23 +34,30 @@ func _build_map() -> void:
 			var gt: Vector2i = MapTiles.GRASS if (x * 3 + y * 7) % 11 != 0 else MapTiles.GRASS_ALT
 			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
-	## ── Border: trees — west entrance at rows 40-42, north exit cols 10-12
-	var west_entrance_rows := range(40, 43)
-	var north_exit_cols := range(10, 13)
-	## Top + bottom rows (stamp trees in pairs since tree is 2x2)
-	for x in range(0, MAP_W, 2):
-		if not (x in north_exit_cols):
-			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, 0, ground_layer, obstacle_layer)
-		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, MAP_H - 2, ground_layer, obstacle_layer)
-	## Left + right columns
-	for y in range(0, MAP_H, 2):
-		if not (y in west_entrance_rows):
-			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, y, ground_layer, obstacle_layer)
-		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, y, ground_layer, obstacle_layer)
+	## ── Border: tree-line around the map edge ───────────────────────────────────
+	## Collision is sealed by the StaticBody2D perimeter wall in _add_perimeter_walls.
+	var bx := 0
+	while bx < MAP_W - 1:        ## top border (skip north exit cols)
+		if not (bx in NORTH_EXIT_COLS or (bx + 1) in NORTH_EXIT_COLS):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, bx, 0, ground_layer, obstacle_layer)
+		bx += 2
+	bx = 0
+	while bx < MAP_W - 1:        ## bottom border
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, bx, MAP_H - 2, ground_layer, obstacle_layer)
+		bx += 2
+	var by := 0
+	while by < MAP_H - 1:        ## left border (skip west entrance rows)
+		if not (by in WEST_ENTRANCE_ROWS or (by + 1) in WEST_ENTRANCE_ROWS):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, by, ground_layer, obstacle_layer)
+		by += 2
+	by = 0
+	while by < MAP_H - 1:        ## right border
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, by, ground_layer, obstacle_layer)
+		by += 2
 
 	## North exit blocked by sign (The Scald not open yet)
-	for x in north_exit_cols:
-		obstacle_layer.set_cell(Vector2i(x, 1), src, MapTiles.SIGN)
+	for xc in NORTH_EXIT_COLS:
+		obstacle_layer.set_cell(Vector2i(xc, 1), src, MapTiles.SIGN)
 
 	## ── Section 1: South — rocky entrance (rows 38-47) ───────────────────
 	for x in range(0, 12):
@@ -88,13 +98,15 @@ func _build_map() -> void:
 	for x in range(6, 16):
 		_set_ground(x, 20, MapTiles.DIRT_PATH)
 
-	## Pond (6 wide × 5 tall, rounded)
+	## Pond — water visuals on ground_layer only; invisible body blocks entry.
 	for x in range(4, 10):
 		for y in range(22, 27):
 			var is_corner := (x == 4 or x == 9) and (y == 22 or y == 26)
 			if not is_corner:
 				_set_ground(x, y, MapTiles.WATER)
-				obstacle_layer.set_cell(Vector2i(x, y), src, MapTiles.WATER)
+	add_child(_make_static_box(
+		Vector2(4 * TILE_SIZE, 22 * TILE_SIZE),
+		Vector2(6 * TILE_SIZE, 5 * TILE_SIZE)))
 
 	## Trees around pond
 	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 3, 21, ground_layer, obstacle_layer)
@@ -136,6 +148,51 @@ func _build_map() -> void:
 
 func _set_ground(x: int, y: int, tile: Vector2i) -> void:
 	ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, tile)
+
+
+func _make_static_box(top_left: Vector2, size: Vector2) -> StaticBody2D:
+	var body := StaticBody2D.new()
+	body.collision_layer = 2
+	body.collision_mask  = 0
+	var cs   := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size    = size
+	cs.position  = top_left + size * 0.5
+	cs.shape     = rect
+	body.add_child(cs)
+	return body
+
+
+## Invisible StaticBody2D wall sealing the map border, leaving only intended exits open.
+func _add_perimeter_walls() -> void:
+	var wall := StaticBody2D.new()
+	wall.collision_layer = 2
+	wall.collision_mask  = 0
+	var W   := float(MAP_W * TILE_SIZE)
+	var H   := float(MAP_H * TILE_SIZE)
+	var T   := float(TILE_SIZE)
+	var nx0 := float(NORTH_EXIT_COLS[0])       * T
+	var nx1 := float(NORTH_EXIT_COLS[-1] + 1)  * T
+	var wy0 := float(WEST_ENTRANCE_ROWS[0])    * T
+	var wy1 := float(WEST_ENTRANCE_ROWS[-1] + 1) * T
+	_wall_seg(wall, 0.0,     0.0,     nx0,     T)         ## top-left of north gap
+	_wall_seg(wall, nx1,     0.0,     W - nx1, T)         ## top-right of north gap
+	_wall_seg(wall, 0.0,     H - T,   W,       T)         ## bottom
+	_wall_seg(wall, 0.0,     0.0,     T,       wy0)       ## left-top of west gap
+	_wall_seg(wall, 0.0,     wy1,     T,       H - wy1)   ## left-bottom of west gap
+	_wall_seg(wall, W - T,   0.0,     T,       H)         ## right
+	add_child(wall)
+
+
+func _wall_seg(parent: StaticBody2D, x: float, y: float, w: float, h: float) -> void:
+	if w <= 0.0 or h <= 0.0:
+		return
+	var cs   := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size   = Vector2(w, h)
+	cs.position = Vector2(x + w * 0.5, y + h * 0.5)
+	cs.shape    = rect
+	parent.add_child(cs)
 
 
 func _setup_camera_bounds() -> void:

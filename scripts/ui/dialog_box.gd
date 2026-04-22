@@ -129,6 +129,10 @@ func _next_line() -> void:
 	## Object-form lines (flag sets, future actions) — handle and skip.
 	if line is Dictionary:
 		var d: Dictionary = line
+		if d.has("save_game"):
+			SaveSystem.save()
+			_next_line()
+			return
 		if d.has("set_flag"):
 			var flag: String = d["set_flag"]
 			if GameState.has_method("set_flag"):

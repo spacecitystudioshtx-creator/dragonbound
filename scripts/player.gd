@@ -44,6 +44,8 @@ func _physics_process(delta: float) -> void:
 			_play_idle()
 		return
 
+	z_index = int(position.y)   ## y-sort: higher y = renders in front of objects above
+
 	if is_moving:
 		_move_toward_target(delta)
 	else:
@@ -58,8 +60,12 @@ func _move_toward_target(delta: float) -> void:
 		position = target_pos
 		is_moving = false
 		tile_stepped.emit()
-		# Chain the next step immediately (no turn delay while already walking)
-		_try_start_move()
+		# Auto-talk: if an NPC is one tile ahead in the facing direction, start dialog.
+		if GameMode.current() == GameMode.Mode.OVERWORLD:
+			_try_interact()
+		# Chain the next step only if dialog didn't open.
+		if GameMode.current() == GameMode.Mode.OVERWORLD:
+			_try_start_move()
 		if not is_moving:
 			_play_idle()
 	else:
@@ -114,13 +120,22 @@ func _get_input_direction() -> Vector2:
 	if joystick_input.length() > 0.3:
 		dir = joystick_input
 
-	# Snap to dominant axis — no diagonal movement
 	if dir == Vector2.ZERO:
 		return Vector2.ZERO
-	if abs(dir.x) > abs(dir.y):
+
+	# Require one axis to be clearly dominant (>0.4 difference) to avoid
+	# rapid flipping when joystick sits diagonally — which causes visual spinning.
+	# 0.4 means one axis must dominate by 40% before we commit to a direction turn.
+	var dx: float = abs(dir.x)
+	var dy: float = abs(dir.y)
+	const AXIS_BIAS := 0.4
+	if dx > dy + AXIS_BIAS:
 		return Vector2(sign(dir.x), 0)
-	else:
+	elif dy > dx + AXIS_BIAS:
 		return Vector2(0, sign(dir.y))
+	else:
+		# Ambiguous diagonal — stay in current facing direction rather than flipping.
+		return facing
 
 
 ## Check if the target position is walkable.
@@ -169,3 +184,29 @@ func _play_walk() -> void:
 		Vector2.UP:    sprite.play("walk_up")
 		Vector2.LEFT:  sprite.play("walk_left")
 		Vector2.RIGHT: sprite.play("walk_right")
+
+
+## ── Interaction (A / Enter / tap) ────────────────────────────────────────────
+
+func _unhandled_input(event: InputEvent) -> void:
+	if GameMode.current() != GameMode.Mode.OVERWORLD:
+		return
+	if event.is_action_pressed("ui_accept"):
+		_try_interact()
+		get_viewport().set_input_as_handled()
+
+
+## Cast a check 1 tile ahead — if an interactable Area2D is there, trigger it.
+func _try_interact() -> void:
+	var check_pos := position + facing * float(TILE_SIZE)
+	for area in get_tree().get_nodes_in_group("interactable"):
+		if not area is Area2D:
+			continue
+		var area2d := area as Area2D
+		var dist: float = area2d.global_position.distance_to(check_pos)
+		if dist < float(TILE_SIZE) * 0.75:
+			var df: String  = area.get_meta("dialog_file", "")
+			var nid: String = area.get_meta("node_id",     "")
+			if df != "" and nid != "":
+				SignalBus.dialog_requested.emit(df, nid)
+				return

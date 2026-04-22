@@ -49,6 +49,7 @@ func _serialize_party() -> Array:
 	for d in party:
 		if d == null:
 			continue
+
 		var entry := {
 			"id": d.data.drake_name.to_lower() if d.data else "unknown",
 			"species_id": _find_species_id(d),

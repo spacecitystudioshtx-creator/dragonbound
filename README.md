@@ -145,11 +145,50 @@ Void, Celestial, Ancient, Spirit, Crystal, Blood
 A scheduled task runs at 02:16 AM daily. It reads `data/brief_queue.json`, processes up to 3 pending briefs through the appropriate skill, validates, and commits the batch. Morning log in `data/nightly_log.md`.
 
 ## Art Style
-- 16×16 tiles, nearest-neighbor scaling, crisp pixels
-- Overworld: top-down, tile-based, Fire Red camera style
-- Characters: 16×16 4-frame walk per direction (Ninja Adventure CC0 pack)
-- Tile assets: Pixel-Boy's **Ninja Adventure Asset Pack** (CC0) — `art/tilesets/ninja_adventure/`
-- Drake sprites: AI-generated 64×64, stored in `art/drakes/`
+
+### Overall Aesthetic
+Pokémon FireRed / LeafGreen (GBA Gen 3). That is the single reference point for all visual decisions.
+
+### Tiles & Overworld
+- **16×16 px tiles**, nearest-neighbor scaling (no anti-aliasing, ever)
+- Top-down tile grid, FireRed camera locked to player
+- Character walk cycle: 16×16, 4 frames per direction (Ninja Adventure CC0 pack)
+- Tile assets: `art/tilesets/ninja_adventure/`
+
+### Drake Battle Sprites — Target Style
+Reference image: official Gen-3 Pokémon battle sprites (FireRed, Emerald era).
+
+| Property | Spec |
+|---|---|
+| **Resolution** | 80×80 px stored; displayed at 52×52 in battle |
+| **Background** | Pure black (#000000) |
+| **Outline** | Bold 1–2 px black, no anti-aliasing |
+| **Shading** | Flat cell shading only — no gradients, no airbrushing |
+| **Palette** | Limited GBA-style (~32 colors max per sprite) |
+| **Pose** | Front 3/4 view, facing the viewer, bipedal stance |
+| **Silhouette** | Strong, readable at small size |
+
+**What makes it look right:**
+- Dark background so the outline pops
+- 2–3 flat tones per color region (base, one highlight, one shadow) — no smooth blending
+- Chunky, readable pixels visible even at 52 px display size
+- Creature fills ~70–80% of the canvas
+- Scales, plates, spikes described by shape and color, not texture
+
+**What to avoid:**
+- Smooth gradients / airbrush / painterly style
+- White or gradient backgrounds
+- Anime/chibi proportions
+- Overly cute or overly realistic — Gen-3 sits in the middle: fierce but stylized
+
+### Adding a New Drake Sprite
+1. Open `scripts/tools/sprite_generator.gd`
+2. Add a `_add("your_id", "description")` call in `_build_sprite_list()`
+3. Write the description as **shapes + flat colors only**:
+   - ✅ `"dark navy scales, cream segmented underbelly, large crimson bat wings, ivory spine spikes, glowing red eyes"`
+   - ❌ `"cool blue dragon with awesome wings and scary look"`
+4. Run the scene in Godot, paste your HuggingFace token, click Generate All
+5. Restart Godot → PNG auto-imports and shows up in battle immediately
 
 ## Engine Architecture
 - `project.godot` autoloads (load order matters):

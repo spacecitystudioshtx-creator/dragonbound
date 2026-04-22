@@ -70,17 +70,25 @@ const PROP_TREE_BIG := [
 	{"dx": 1, "dy": 2, "c":  1, "r": 8, "solid": false},
 ]
 
-## Small brown house 3×3 (Pyre-style / player's home scale).
+## Small wooden house 4×3 — uses the lower section (rows 9–11) of the same
+## wooden-building atlas region as PROP_HOUSE_BIG, so they share one coherent style.
+## Door is at (dx=1, dy=2) — second tile from left in the bottom row.
 const PROP_HOUSE_SMALL := [
-	{"dx": 0, "dy": 0, "c": 10, "r": 0, "solid": true},
-	{"dx": 1, "dy": 0, "c": 11, "r": 0, "solid": true},
-	{"dx": 2, "dy": 0, "c": 12, "r": 0, "solid": true},
-	{"dx": 0, "dy": 1, "c": 10, "r": 1, "solid": true},
-	{"dx": 1, "dy": 1, "c": 11, "r": 1, "solid": true},
-	{"dx": 2, "dy": 1, "c": 12, "r": 1, "solid": true},
-	{"dx": 0, "dy": 2, "c": 10, "r": 2, "solid": true},
-	{"dx": 1, "dy": 2, "c": 11, "r": 2, "solid": false},  ## door
-	{"dx": 2, "dy": 2, "c": 12, "r": 2, "solid": true},
+	## Upper wall row (atlas row 9)
+	{"dx": 0, "dy": 0, "c": 13, "r": 9, "solid": true},
+	{"dx": 1, "dy": 0, "c": 14, "r": 9, "solid": true},
+	{"dx": 2, "dy": 0, "c": 15, "r": 9, "solid": true},
+	{"dx": 3, "dy": 0, "c": 16, "r": 9, "solid": true},
+	## Lower wall row (atlas row 10)
+	{"dx": 0, "dy": 1, "c": 13, "r": 10, "solid": true},
+	{"dx": 1, "dy": 1, "c": 14, "r": 10, "solid": true},
+	{"dx": 2, "dy": 1, "c": 15, "r": 10, "solid": true},
+	{"dx": 3, "dy": 1, "c": 16, "r": 10, "solid": true},
+	## Base + door row (atlas row 11)
+	{"dx": 0, "dy": 2, "c": 13, "r": 11, "solid": true},
+	{"dx": 1, "dy": 2, "c": 14, "r": 11, "solid": false},  ## door — walkable
+	{"dx": 2, "dy": 2, "c": 15, "r": 11, "solid": true},
+	{"dx": 3, "dy": 2, "c": 16, "r": 11, "solid": true},
 ]
 
 ## Large brown 2-story house 4×6 (The Pyre / elder's house).

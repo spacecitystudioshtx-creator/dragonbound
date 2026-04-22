@@ -48,10 +48,7 @@ const VILLAGE_SOLID_COORDS := [
 	Vector2i(0, 3), Vector2i(1, 3), Vector2i(0, 4),
 	## Big tree trunk (2x3 at cols 0-1 rows 6-8)
 	Vector2i(0, 6), Vector2i(1, 6), Vector2i(0, 7), Vector2i(1, 7), Vector2i(0, 8),
-	## Small house 3x3 (cols 10-12 rows 0-2)
-	Vector2i(10, 0), Vector2i(11, 0), Vector2i(12, 0),
-	Vector2i(10, 1), Vector2i(11, 1), Vector2i(12, 1),
-	Vector2i(10, 2),                  Vector2i(12, 2),   ## 11,2 is door → walkable
+	## (Old 3×3 moss house at cols 10-12 rows 0-2 no longer used — removed)
 	## Big house 4x6 (cols 13-16 rows 6-11)
 	Vector2i(13,  6), Vector2i(14,  6), Vector2i(15,  6), Vector2i(16,  6),
 	Vector2i(13,  7), Vector2i(14,  7), Vector2i(15,  7), Vector2i(16,  7),

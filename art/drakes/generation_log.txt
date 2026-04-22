@@ -1,0 +1,67 @@
+2026-04-21 18:52:11,142  Drake sprite generation — 12 sprites
+2026-04-21 18:52:11,143  Output: /Users/alexdimitroff/Space-City-Studios/Dragonbound/art/drakes
+2026-04-21 18:52:11,143  Models: SD3 (primary) → FLUX.1-schnell (fallback)
+2026-04-21 18:52:11,143  
+[1/12] ember
+2026-04-21 18:52:11,143      Using SD3 …
+2026-04-21 18:52:14,126      Generated: (512, 512) RGB
+2026-04-21 18:52:14,290      ✓ Saved ember_front.png (9,708 bytes)
+2026-04-21 18:52:14,290  
+[2/12] scornn
+2026-04-21 18:52:14,290      Using SD3 …
+2026-04-21 18:52:17,268      Generated: (512, 512) RGB
+2026-04-21 18:52:17,283      ✓ Saved scornn_front.png (6,983 bytes)
+2026-04-21 18:52:17,283  
+[3/12] ashvane
+2026-04-21 18:52:17,283      Using SD3 …
+2026-04-21 18:52:20,235      Generated: (512, 512) RGB
+2026-04-21 18:52:20,484      ✓ Saved ashvane_front.png (4,871 bytes)
+2026-04-21 18:52:20,484  
+[4/12] ripple
+2026-04-21 18:52:20,484      Using SD3 …
+2026-04-21 18:52:23,412      Generated: (512, 512) RGB
+2026-04-21 18:52:23,573      ✓ Saved ripple_front.png (9,252 bytes)
+2026-04-21 18:52:23,573  
+[5/12] undertow
+2026-04-21 18:52:23,573      Using SD3 …
+2026-04-21 18:52:26,484      Generated: (512, 512) RGB
+2026-04-21 18:52:26,629      ✓ Saved undertow_front.png (9,533 bytes)
+2026-04-21 18:52:26,629  
+[6/12] tidewrath
+2026-04-21 18:52:26,629      Using SD3 …
+2026-04-21 18:52:29,558      Generated: (512, 512) RGB
+2026-04-21 18:52:29,802      ✓ Saved tidewrath_front.png (4,835 bytes)
+2026-04-21 18:52:29,802  
+[7/12] sprig
+2026-04-21 18:52:29,802      Using SD3 …
+2026-04-21 18:52:32,692      Generated: (512, 512) RGB
+2026-04-21 18:52:32,894      ✓ Saved sprig_front.png (9,541 bytes)
+2026-04-21 18:52:32,894  
+[8/12] thicket
+2026-04-21 18:52:32,894      Using SD3 …
+2026-04-21 18:52:35,905      Generated: (512, 512) RGB
+2026-04-21 18:52:35,919      ✓ Saved thicket_front.png (7,090 bytes)
+2026-04-21 18:52:35,919  
+[9/12] ironbark
+2026-04-21 18:52:35,919      Using SD3 …
+2026-04-21 18:52:38,808      Generated: (512, 512) RGB
+2026-04-21 18:52:39,021      ✓ Saved ironbark_front.png (7,745 bytes)
+2026-04-21 18:52:39,021  
+[10/12] flick
+2026-04-21 18:52:39,021      Using SD3 …
+2026-04-21 18:52:41,945      Generated: (512, 512) RGB
+2026-04-21 18:52:42,183      ✓ Saved flick_front.png (4,796 bytes)
+2026-04-21 18:52:42,184  
+[11/12] tuft
+2026-04-21 18:52:42,184      Using SD3 …
+2026-04-21 18:52:45,067      Generated: (512, 512) RGB
+2026-04-21 18:52:45,233      ✓ Saved tuft_front.png (9,406 bytes)
+2026-04-21 18:52:45,233  
+[12/12] gulp
+2026-04-21 18:52:45,233      Using SD3 …
+2026-04-21 18:52:48,115      Generated: (512, 512) RGB
+2026-04-21 18:52:48,333      ✓ Saved gulp_front.png (7,326 bytes)
+2026-04-21 18:52:48,333  
+============================================================
+2026-04-21 18:52:48,333  Done: 12/12 generated successfully.
+2026-04-21 18:52:48,333  Restart Godot to import the new sprites.

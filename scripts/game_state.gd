@@ -59,6 +59,12 @@ func get_combo_bench() -> DrakeInstance:
 	return bench[selected_bench_slot]
 
 
+## Restore all drakes to full HP (used after a blackout).
+func heal_party() -> void:
+	for drake in party:
+		drake.current_hp = drake.get_max_hp()
+
+
 ## Reset all drake battle modifiers after a fight.
 func reset_party_battle_state() -> void:
 	for drake in party:
