@@ -44,8 +44,8 @@ const STRIP_SOLID := [2, 10, 11, 12, 13, 14, 15]
 ## Tiles in the village atlas (source 1) that block movement, as Vector2i.
 ## Any tile not listed is walkable. Used for props placed via stamp().
 const VILLAGE_SOLID_COORDS := [
-	## Trees (bushy 2x2 at cols 0-1 rows 3-4)
-	Vector2i(0, 3), Vector2i(1, 3), Vector2i(0, 4),
+	## Small bushy tree (2x2 at cols 4-5 rows 6-7; (5,7) trunk base is walkable)
+	Vector2i(4, 6), Vector2i(5, 6), Vector2i(4, 7),
 	## Big tree trunk (2x3 at cols 0-1 rows 6-8)
 	Vector2i(0, 6), Vector2i(1, 6), Vector2i(0, 7), Vector2i(1, 7), Vector2i(0, 8),
 	## Small house 3x3 (cols 10-12 rows 0-2)
@@ -104,6 +104,7 @@ static func create_placeholder_tileset() -> TileSet:
 	strip_src.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
 	for i in cols:
 		strip_src.create_tile(Vector2i(i, 0))
+	tileset.add_source(strip_src, 0)
 	var poly := PackedVector2Array([
 		Vector2(-8, -8), Vector2(8, -8), Vector2(8, 8), Vector2(-8, 8)
 	])
@@ -111,7 +112,6 @@ static func create_placeholder_tileset() -> TileSet:
 		var td := strip_src.get_tile_data(Vector2i(i, 0), 0)
 		td.add_collision_polygon(0)
 		td.set_collision_polygon_points(0, 0, poly)
-	tileset.add_source(strip_src, 0)
 
 	## ── Source 1: full village atlas ─────────────────────────────────────────
 	if village_img != null:
@@ -126,6 +126,7 @@ static func create_placeholder_tileset() -> TileSet:
 		for c in vcols:
 			for r in vrows:
 				vsrc.create_tile(Vector2i(c, r))
+		tileset.add_source(vsrc, 1)
 		## Apply collision to listed coords.
 		for coord in VILLAGE_SOLID_COORDS:
 			if coord.x < vcols and coord.y < vrows:
@@ -133,7 +134,6 @@ static func create_placeholder_tileset() -> TileSet:
 				if td != null:
 					td.add_collision_polygon(0)
 					td.set_collision_polygon_points(0, 0, poly)
-		tileset.add_source(vsrc, 1)
 
 	return tileset
 

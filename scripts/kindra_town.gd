@@ -31,7 +31,8 @@ func _build_map() -> void:
 	## ── Ground fill (grass with occasional variation) ───────────────────
 	for x in MAP_W:
 		for y in MAP_H:
-			var gt: Vector2i = MapTiles.GRASS if (x + y * 3) % 7 != 0 else MapTiles.GRASS_ALT
+			## Sparse alt tile for subtle variation (1 in 19 ≈ 5%, was 1 in 7 — too busy)
+			var gt: Vector2i = MapTiles.GRASS if (x * 5 + y * 3) % 19 != 0 else MapTiles.GRASS_ALT
 			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
 	## ── Border: ring of big trees ────────────────────────────────────────
@@ -63,16 +64,21 @@ func _build_map() -> void:
 	## Branch to player's home (row 23, cols 8-18)
 	for x in range(8, 19):
 		_set_ground(x, 23, MapTiles.DIRT_PATH)
-	## Branch south to player home door (col 10)
-	for y in range(23, 26):
+	## Branch south to player home door at (10, 26)
+	for y in range(23, 27):
 		_set_ground(10, y, MapTiles.DIRT_PATH)
-	## Branch to Supply Shop (col 26, rows 10-15)
-	for y in range(10, 16):
-		_set_ground(26, y, MapTiles.DIRT_PATH)
-	## Branch to Elder's house (col 12, rows 5-15)
-	for y in range(5, 16):
+	## Branch to Supply Shop door at (25, 12) — col 25 from row 12 down to main E-W road
+	for y in range(12, 16):
+		_set_ground(25, y, MapTiles.DIRT_PATH)
+	## Branch to Elder's house door at (5, 6) — col 12 vertical, then row 6 corridor west
+	for y in range(6, 16):
 		_set_ground(12, y, MapTiles.DIRT_PATH)
-	## Branch to The Pyre (row 8, cols 18-23)
+	for x in range(5, 13):
+		_set_ground(x, 6, MapTiles.DIRT_PATH)
+	## Branch to NPC house door at (4, 13) — col 4 from row 13 to main E-W road
+	for y in range(13, 16):
+		_set_ground(4, y, MapTiles.DIRT_PATH)
+	## Branch to The Pyre door at (21, 8) — row 8, cols 18-23
 	for x in range(18, 24):
 		_set_ground(x, 8, MapTiles.DIRT_PATH)
 

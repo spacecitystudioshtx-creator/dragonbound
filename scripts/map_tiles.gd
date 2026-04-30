@@ -52,12 +52,13 @@ const TALL_GR  := TALL_GRASS
 ##
 ## Coordinates below were read from /tmp/village_labeled.png (grid overlay).
 
-## Small round 2×2 tree (soft bushy oak) — Ninja Adventure village atlas.
+## Small round 2×2 tree (bushy oak) — Ninja Adventure village atlas.
+## Atlas (4,6)-(5,7). Old (0,3)-(1,4) coords pointed to a peach pottery prop.
 const PROP_TREE_SMALL := [
-	{"dx": 0, "dy": 0, "c":  0, "r": 3, "solid": true},
-	{"dx": 1, "dy": 0, "c":  1, "r": 3, "solid": true},
-	{"dx": 0, "dy": 1, "c":  0, "r": 4, "solid": true},
-	{"dx": 1, "dy": 1, "c":  1, "r": 4, "solid": false},  ## trunk base walkable behind
+	{"dx": 0, "dy": 0, "c":  4, "r": 6, "solid": true},
+	{"dx": 1, "dy": 0, "c":  5, "r": 6, "solid": true},
+	{"dx": 0, "dy": 1, "c":  4, "r": 7, "solid": true},
+	{"dx": 1, "dy": 1, "c":  5, "r": 7, "solid": false},  ## trunk base walkable behind
 ]
 
 ## Large 2×3 tree (trunk + canopy).

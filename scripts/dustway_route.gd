@@ -28,7 +28,8 @@ func _build_map() -> void:
 	## ── Ground fill ──────────────────────────────────────────────────────
 	for x in MAP_W:
 		for y in MAP_H:
-			var gt: Vector2i = MapTiles.GRASS if (x * 3 + y * 7) % 11 != 0 else MapTiles.GRASS_ALT
+			## Sparse alt tile for subtle variation (1 in 19 ≈ 5%, was 1 in 11 — too busy)
+			var gt: Vector2i = MapTiles.GRASS if (x * 5 + y * 7) % 19 != 0 else MapTiles.GRASS_ALT
 			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
 	## ── Border: trees — west entrance at rows 40-42, north exit cols 10-12
