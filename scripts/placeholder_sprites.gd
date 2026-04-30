@@ -14,19 +14,14 @@
 
 extends Node
 
-const SPRITE_W := 16
-const SPRITE_H := 16
-const FRAMES := 4
+const SPRITE_W := 32
+const SPRITE_H := 32
 
+## Single 32x32 trainer character. Currently all 16 player.tscn AtlasTextures
+## point to Rect2(0, 0, 32, 32) so direction/frame doesn't matter — the same
+## image renders for every state. When a true 4-direction sheet is generated,
+## update player.tscn regions to slice it.
 const SOURCE_PATH := "res://art/characters/player/player_sheet.png"
-
-## Source-row → destination-row in our baked sheet.
-const DIRS := {
-	"down":  {"src_row": 0, "dst_row": 0},
-	"up":    {"src_row": 1, "dst_row": 1},
-	"left":  {"src_row": 2, "dst_row": 2},
-	"right": {"src_row": 3, "dst_row": 3},
-}
 
 var _tex: ImageTexture = null
 
@@ -37,22 +32,15 @@ func _ready() -> void:
 
 
 func _generate() -> void:
-	var sheet := Image.create(SPRITE_W * FRAMES, SPRITE_H * 4, false, Image.FORMAT_RGBA8)
-	sheet.fill(Color(0, 0, 0, 0))
-
 	var src := _load_source()
 	if src == null:
 		push_warning("placeholder_sprites: source not found, using fallback")
+		var sheet := Image.create(SPRITE_W, SPRITE_H, false, Image.FORMAT_RGBA8)
+		sheet.fill(Color(0, 0, 0, 0))
 		_fallback(sheet)
+		_tex = ImageTexture.create_from_image(sheet)
 	else:
-		for dir_name in DIRS.keys():
-			var info: Dictionary = DIRS[dir_name]
-			var src_y: int = int(info["src_row"]) * SPRITE_H
-			var dst_y: int = int(info["dst_row"]) * SPRITE_H
-			for f in FRAMES:
-				_blit(src, f * SPRITE_W, src_y, sheet, f * SPRITE_W, dst_y, SPRITE_W, SPRITE_H)
-
-	_tex = ImageTexture.create_from_image(sheet)
+		_tex = ImageTexture.create_from_image(src)
 	_apply_deferred()
 
 
@@ -79,17 +67,10 @@ func _blit(src: Image, sx: int, sy: int, dst: Image, dx: int, dy: int, w: int, h
 
 
 func _fallback(sheet: Image) -> void:
-	var colors := [
-		Color(0.82, 0.14, 0.14), Color(0.14, 0.14, 0.82),
-		Color(0.14, 0.82, 0.14), Color(0.82, 0.82, 0.14),
-	]
-	for row in 4:
-		for frame in FRAMES:
-			var ox := frame * SPRITE_W
-			var oy := row * SPRITE_H
-			for y in range(3, 13):
-				for x in range(3, 13):
-					sheet.set_pixel(ox + x, oy + y, colors[row])
+	## Source PNG missing — draw a magenta box so it's obvious we're falling back.
+	for y in range(4, SPRITE_H - 4):
+		for x in range(4, SPRITE_W - 4):
+			sheet.set_pixel(x, y, Color(1.0, 0.0, 1.0, 1.0))
 
 
 func _apply_deferred() -> void:
