@@ -27,6 +27,8 @@ const SRC_ROOM_SHOP := 6
 const SRC_ROOM_HOUSE := 7
 const SRC_ROOM_PYRE := 8
 const SRC_ROOM_ELDER := 9
+const SRC_KINDRA_EAST := 10
+const SRC_DUSTWAY_ENTRY := 11
 
 ## ── Ground strip indices (source 0) ──────────────────────────────────────────
 const GRASS        := Vector2i(0, 0)

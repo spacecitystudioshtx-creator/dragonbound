@@ -8,6 +8,8 @@ extends Node2D
 const TILE_SIZE := 16
 const MAP_W := 22
 const MAP_H := 48
+const ENTRY_SCREEN_ORIGIN := Vector2i(0, 36)
+const SCREEN_SIZE := Vector2i(15, 10)
 const KINDRA_GRASS_TILES := [Vector2i(0, 3), Vector2i(5, 0), Vector2i(6, 1), Vector2i(9, 5), Vector2i(14, 5)]
 const KINDRA_PATH := Vector2i(1, 4)
 const KINDRA_PATH_DOT := Vector2i(7, 4)
@@ -143,6 +145,7 @@ func _build_map() -> void:
 	## Sign near rival clearing
 	obstacle_layer.set_cell(Vector2i(12, 14), src, MapTiles.SIGN)
 	_paint_dustway_theme()
+	_stamp_generated_entry_screen()
 
 
 func _paint_dustway_theme() -> void:
@@ -193,6 +196,18 @@ func _paint_dustway_theme() -> void:
 		_set_kindra_obstacle(pos, KINDRA_SIGN)
 	for pos in [Vector2i(4, 44), Vector2i(8, 43), Vector2i(15, 42), Vector2i(17, 44)]:
 		_set_kindra_obstacle(pos, KINDRA_BOULDER)
+
+
+func _stamp_generated_entry_screen() -> void:
+	for lx in SCREEN_SIZE.x:
+		for ly in SCREEN_SIZE.y:
+			var pos := ENTRY_SCREEN_ORIGIN + Vector2i(lx, ly)
+			ground_layer.set_cell(pos, MapTiles.SRC_DUSTWAY_ENTRY, Vector2i(lx, ly))
+			obstacle_layer.erase_cell(pos)
+	## Keep the west entrance open.
+	for x in range(0, 4):
+		for y in range(40, 43):
+			obstacle_layer.erase_cell(Vector2i(x, y))
 
 
 func _set_kindra_ground(tile: Vector2i, atlas: Vector2i) -> void:

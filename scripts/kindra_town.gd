@@ -10,6 +10,8 @@ const MAP_W := 36
 const MAP_H := 30
 const STARTER_SCREEN_ORIGIN := Vector2i(3, 15)
 const STARTER_SCREEN_SIZE := Vector2i(15, 10)
+const EAST_SCREEN_ORIGIN := Vector2i(21, 10)
+const SCREEN_SIZE := Vector2i(15, 10)
 
 const KINDRA_GRASS_TILES := [Vector2i(0, 3), Vector2i(5, 0), Vector2i(6, 1), Vector2i(9, 5), Vector2i(14, 5)]
 const KINDRA_PATH := Vector2i(1, 4)
@@ -143,6 +145,7 @@ func _build_map() -> void:
 	obstacle_layer.set_cell(Vector2i(18,  2), src, MapTiles.SIGN)  ## "North — Road Closed"
 
 	_paint_full_kindra_theme()
+	_stamp_generated_screen(MapTiles.SRC_KINDRA_EAST, EAST_SCREEN_ORIGIN)
 	_stamp_generated_starter_screen()
 	_clear_east_exit()
 
@@ -230,6 +233,14 @@ func _stamp_generated_starter_screen() -> void:
 	## Keep visible doors walkable/enterable.
 	for local_door in [Vector2i(2, 3), Vector2i(13, 3)]:
 		obstacle_layer.erase_cell(STARTER_SCREEN_ORIGIN + local_door)
+
+
+func _stamp_generated_screen(source_id: int, origin: Vector2i) -> void:
+	for lx in SCREEN_SIZE.x:
+		for ly in SCREEN_SIZE.y:
+			var pos := origin + Vector2i(lx, ly)
+			ground_layer.set_cell(pos, source_id, Vector2i(lx, ly))
+			obstacle_layer.erase_cell(pos)
 
 
 func _clear_east_exit() -> void:

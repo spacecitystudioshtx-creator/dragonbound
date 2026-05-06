@@ -18,6 +18,8 @@ const ROOM_SCREEN_PATHS := {
 	7: "res://art/generated/backgrounds/kindra_house_interior_live.png",
 	8: "res://art/generated/backgrounds/kindra_pyre_interior_live.png",
 	9: "res://art/generated/backgrounds/kindra_elder_interior_live.png",
+	10: "res://art/generated/backgrounds/kindra_east_exit_live.png",
+	11: "res://art/generated/backgrounds/dustway_entry_live.png",
 }
 
 ## Tiles in the strip that block movement.
@@ -126,7 +128,7 @@ static func create_placeholder_tileset() -> TileSet:
 		td.add_collision_polygon(0)
 		td.set_collision_polygon_points(0, 0, poly)
 
-	## ── Sources 5-9: generated full-screen room backgrounds ────────────────
+	## ── Sources 5-11: generated full-screen room/route backgrounds ─────────
 	for source_id in ROOM_SCREEN_PATHS.keys():
 		var room_tex := _load_texture(ROOM_SCREEN_PATHS[source_id])
 		if room_tex == null:
