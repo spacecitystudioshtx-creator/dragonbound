@@ -37,7 +37,7 @@ spawn_position = Vector2(24, 656)
 shape = SubResource("exit_east")
 
 [node name="DoorHome" type="Area2D" parent="."]
-position = Vector2(168, 424)
+position = Vector2(172, 472)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
@@ -48,7 +48,7 @@ spawn_position = Vector2(120, 120)
 shape = SubResource("door_shape")
 
 [node name="DoorMarket" type="Area2D" parent="."]
-position = Vector2(88, 296)
+position = Vector2(112, 280)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
@@ -59,7 +59,7 @@ spawn_position = Vector2(120, 120)
 shape = SubResource("door_shape")
 
 [node name="DoorHouseEast" type="Area2D" parent="."]
-position = Vector2(264, 296)
+position = Vector2(394, 280)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
@@ -70,7 +70,7 @@ spawn_position = Vector2(120, 120)
 shape = SubResource("door_shape")
 
 [node name="DoorPyre" type="Area2D" parent="."]
-position = Vector2(344, 136)
+position = Vector2(386, 128)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")
@@ -81,7 +81,7 @@ spawn_position = Vector2(120, 120)
 shape = SubResource("door_shape")
 
 [node name="DoorElder" type="Area2D" parent="."]
-position = Vector2(88, 104)
+position = Vector2(112, 128)
 collision_layer = 4
 collision_mask = 1
 script = ExtResource("4_transition")

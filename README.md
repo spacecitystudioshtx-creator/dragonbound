@@ -6,33 +6,36 @@ A Pokémon FireRed-style 2D pixel art creature collector RPG for iOS. Collect, b
 
 **Playable scaffolding:** grid movement, 3 connected zones (Kindra → Dustway → Zone 2), turn-based battle framework, 12 drakes with moves + synergies, FireRed-style dialog textbox, auto-save. Running in Godot 4.6.
 
-**Current visual direction:** original IP with a very close GBA creature-RPG feel: 240×160 viewport, 16×16 grid movement, generated starter-town screen, generated-style room screens, original drake sprites, and FireRed-inspired battle staging.
+**Current visual direction:** original IP with a very close GBA creature-RPG feel: 240×160 viewport, 16×16 grid movement, generated full-map outdoor atlases, ComfyUI-style room screens, original drake sprites, and FireRed-inspired battle staging.
 
-**What works end-to-end:** walking, scene transitions, wild encounters, starter gift, save/load, generated drake sprites, starter-area screenshots, room screenshots.
-**Not wired yet:** NPCs in the overworld, trial wardens, music, item/bag system, capture flow, production-quality full-route ComfyUI maps.
+**What works end-to-end:** walking, scene transitions, east-zone exit, wild encounters, starter gift, save/load, generated drake sprites, starter-area screenshots, route screenshots, room screenshots.
+**Not wired yet:** NPCs in the overworld, trial wardens, music, item/bag system, capture flow, full capture UI, production-quality maps beyond the first town/route.
 
 ## FireRed-Shape Production Plan
 
 Dragonbound’s art direction should now default to the ComfyUI pipeline, not hand-built placeholder boxes. The working standard is:
 
-1. Generate a **240×160 screen mockup** for each room, town section, route segment, and battle background.
-2. Slice that screen into **15×10 tiles of 16×16** inside Godot.
-3. Add invisible deterministic collision on top.
-4. Capture screenshots with `tools/render_map_snapshots.gd`.
-5. Compare against FireRed composition references for density, tile clarity, sprite scale, UI placement, and camera framing.
+1. Generate or author a **complete outdoor map atlas** when the camera can scroll through an area. This prevents visible seams and old placeholder edges.
+2. Generate a **240×160 full-screen mockup** for self-contained rooms and battle backgrounds.
+3. Slice generated images into **16×16 atlas cells** inside Godot.
+4. Add invisible deterministic collision and transition zones on top.
+5. Capture screenshots with `tools/render_map_snapshots.gd`.
+6. Compare against FireRed composition references for density, tile clarity, sprite scale, UI placement, and camera framing.
 
 Current generated-style sources:
-- Starter town: `art/generated/backgrounds/kindra_town_style_benchmark_v2_flux2_live.png`
+- Starter town full atlas: `art/generated/backgrounds/kindra_town_full_live.png`
+- Dustway full atlas: `art/generated/backgrounds/dustway_route_full_live.png`
 - Rooms: `art/generated/backgrounds/kindra_*_interior_live.png`
+- Player sheet: `art/player/kindra_trainer_sheet.png`
 - Review screenshots: `art/generated/screenshots/*.png`
 
 ### Next 3-5 Codex Sessions
 
-1. **Replace remaining route/town fallback areas with generated screens.** Generate dedicated 240×160 ComfyUI screens for Kindra west, Kindra east exit, and Dustway entry instead of reusing generic tile fills.
-2. **ComfyUI interior pass.** Replace the current generated-style room placeholders with actual ComfyUI room outputs for home, shop, right house, elder house, and Pyre.
-3. **Battle UI parity pass.** Finish FireRed-style command/menu flow: enemy HP upper-left, player HP lower-right, player sprite lower-left, enemy sprite upper-right, bottom text panel, then add Fight/Bag/Drakes/Run menu before move selection.
-4. **Player/trainer sprite pipeline.** Generate a proper 4-direction chibi trainer sheet through ComfyUI or Aseprite-style pixel workflow and retire procedural trainer generation.
-5. **Screenshot QA gate.** Make every visual task produce `art/generated/screenshots/*` and fail the session if old placeholder tiles, cut-off sprites, or blocked exits appear.
+1. **ComfyUI outdoor atlas pass.** Use the current clean full-map atlases as the playable baseline, then generate/refine higher-detail full atlases for Kindra and Dustway without returning to stitched screens.
+2. **Room consistency pass.** Regenerate home, shop, right house, elder house, and Pyre as one cohesive interior set, then keep only the best ComfyUI outputs as live files.
+3. **Battle UI parity pass.** Finish FireRed-style command/menu flow: enemy HP upper-left, player HP lower-right, player sprite lower-left, enemy sprite upper-right, bottom text panel, then add Fight/Bag/Drakes/Run before move selection.
+4. **Player/trainer sprite pipeline.** Create a production chibi trainer sheet with the same 16×16 footprint, 4-direction turns, and two-step walk frames; keep `art/player/kindra_trainer_sheet.png` as the live contract.
+5. **Screenshot QA gate.** Every visual task must refresh `art/generated/screenshots/*` and fail the session if old placeholder tiles, cut-off sprites, blocked exits, tiny doors, or broken map edges appear.
 
 ## Next steps
 

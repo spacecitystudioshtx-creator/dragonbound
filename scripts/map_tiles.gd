@@ -29,6 +29,8 @@ const SRC_ROOM_PYRE := 8
 const SRC_ROOM_ELDER := 9
 const SRC_KINDRA_EAST := 10
 const SRC_DUSTWAY_ENTRY := 11
+const SRC_KINDRA_FULL := 12
+const SRC_DUSTWAY_FULL := 13
 
 ## ── Ground strip indices (source 0) ──────────────────────────────────────────
 const GRASS        := Vector2i(0, 0)

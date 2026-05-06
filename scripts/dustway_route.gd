@@ -144,8 +144,8 @@ func _build_map() -> void:
 
 	## Sign near rival clearing
 	obstacle_layer.set_cell(Vector2i(12, 14), src, MapTiles.SIGN)
-	_paint_dustway_theme()
-	_stamp_generated_entry_screen()
+	_stamp_full_route_map()
+	_build_full_route_collision()
 
 
 func _paint_dustway_theme() -> void:
@@ -208,6 +208,29 @@ func _stamp_generated_entry_screen() -> void:
 	for x in range(0, 4):
 		for y in range(40, 43):
 			obstacle_layer.erase_cell(Vector2i(x, y))
+
+
+func _stamp_full_route_map() -> void:
+	for x in MAP_W:
+		for y in MAP_H:
+			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_DUSTWAY_FULL, Vector2i(x, y))
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+
+func _build_full_route_collision() -> void:
+	for x in MAP_W:
+		_set_route_collision(Vector2i(x, 0))
+		_set_route_collision(Vector2i(x, MAP_H - 1))
+	for y in MAP_H:
+		if y < 40 or y > 42:
+			_set_route_collision(Vector2i(0, y))
+		_set_route_collision(Vector2i(MAP_W - 1, y))
+	for pos in [Vector2i(6, 40), Vector2i(5, 44), Vector2i(12, 42), Vector2i(16, 24), Vector2i(12, 19)]:
+		_set_route_collision(pos)
+
+
+func _set_route_collision(pos: Vector2i) -> void:
+	obstacle_layer.set_cell(pos, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
 
 
 func _set_kindra_ground(tile: Vector2i, atlas: Vector2i) -> void:

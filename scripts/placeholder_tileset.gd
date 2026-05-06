@@ -20,6 +20,8 @@ const ROOM_SCREEN_PATHS := {
 	9: "res://art/generated/backgrounds/kindra_elder_interior_live.png",
 	10: "res://art/generated/backgrounds/kindra_east_exit_live.png",
 	11: "res://art/generated/backgrounds/dustway_entry_live.png",
+	12: "res://art/generated/backgrounds/kindra_town_full_live.png",
+	13: "res://art/generated/backgrounds/dustway_route_full_live.png",
 }
 
 ## Tiles in the strip that block movement.

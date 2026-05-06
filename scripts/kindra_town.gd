@@ -144,10 +144,8 @@ func _build_map() -> void:
 	obstacle_layer.set_cell(Vector2i(20, 17), src, MapTiles.SIGN)  ## "East → Dustway"
 	obstacle_layer.set_cell(Vector2i(18,  2), src, MapTiles.SIGN)  ## "North — Road Closed"
 
-	_paint_full_kindra_theme()
-	_stamp_generated_screen(MapTiles.SRC_KINDRA_EAST, EAST_SCREEN_ORIGIN)
-	_stamp_generated_starter_screen()
-	_clear_east_exit()
+	_stamp_full_map(MapTiles.SRC_KINDRA_FULL, Vector2i(MAP_W, MAP_H))
+	_build_full_map_collision()
 
 
 func _paint_full_kindra_theme() -> void:
@@ -248,6 +246,56 @@ func _clear_east_exit() -> void:
 		for y in range(14, 17):
 			obstacle_layer.erase_cell(Vector2i(x, y))
 			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_KINDRA_SCREEN, KINDRA_PATH)
+
+
+func _stamp_full_map(source_id: int, size_tiles: Vector2i) -> void:
+	for x in size_tiles.x:
+		for y in size_tiles.y:
+			ground_layer.set_cell(Vector2i(x, y), source_id, Vector2i(x, y))
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+
+func _build_full_map_collision() -> void:
+	for x in MAP_W:
+		_set_collision(Vector2i(x, 0))
+		_set_collision(Vector2i(x, MAP_H - 1))
+	for y in MAP_H:
+		_set_collision(Vector2i(0, y))
+		if y < 14 or y > 16:
+			_set_collision(Vector2i(MAP_W - 1, y))
+
+	## Buildings visible in the generated full map.
+	for pos in [
+		Vector2i(4, 4), Vector2i(5, 4), Vector2i(6, 4), Vector2i(7, 4), Vector2i(8, 4),
+		Vector2i(4, 5), Vector2i(5, 5), Vector2i(6, 5), Vector2i(7, 5), Vector2i(8, 5),
+		Vector2i(20, 4), Vector2i(21, 4), Vector2i(22, 4), Vector2i(23, 4), Vector2i(24, 4), Vector2i(25, 4), Vector2i(26, 4),
+		Vector2i(20, 5), Vector2i(21, 5), Vector2i(22, 5), Vector2i(23, 5), Vector2i(24, 5), Vector2i(25, 5), Vector2i(26, 5),
+		Vector2i(3, 15), Vector2i(4, 15), Vector2i(5, 15), Vector2i(6, 15),
+		Vector2i(3, 16), Vector2i(4, 16), Vector2i(6, 16),
+		Vector2i(22, 15), Vector2i(23, 15), Vector2i(24, 15), Vector2i(25, 15), Vector2i(26, 15),
+		Vector2i(22, 16), Vector2i(23, 16), Vector2i(25, 16), Vector2i(26, 16),
+		Vector2i(8, 27), Vector2i(9, 27), Vector2i(10, 27), Vector2i(11, 27), Vector2i(12, 27),
+		Vector2i(8, 28), Vector2i(9, 28), Vector2i(11, 28), Vector2i(12, 28),
+	]:
+		_set_collision(pos)
+
+	## Foreground fence/hedge barriers.
+	for x in range(2, 15):
+		_set_collision(Vector2i(x, 23))
+		_set_collision(Vector2i(x, 24))
+	for x in range(22, 34):
+		_set_collision(Vector2i(x, 23))
+		_set_collision(Vector2i(x, 24))
+
+	for pos in [Vector2i(13, 17), Vector2i(16, 17), Vector2i(9, 18), Vector2i(24, 16), Vector2i(19, 24)]:
+		_set_collision(pos)
+
+	## Doors and east exit must stay walkable.
+	for pos in [Vector2i(7, 7), Vector2i(24, 7), Vector2i(7, 17), Vector2i(24, 17), Vector2i(10, 29)]:
+		obstacle_layer.erase_cell(pos)
+	for x in [34, 35]:
+		for y in range(14, 17):
+			obstacle_layer.erase_cell(Vector2i(x, y))
 
 
 func _set_kindra_ground(tile: Vector2i, atlas: Vector2i) -> void:
