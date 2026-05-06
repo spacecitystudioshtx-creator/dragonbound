@@ -8,6 +8,15 @@ extends Node2D
 const TILE_SIZE := 16
 const MAP_W := 22
 const MAP_H := 48
+const KINDRA_GRASS_TILES := [Vector2i(0, 3), Vector2i(5, 0), Vector2i(6, 1), Vector2i(9, 5), Vector2i(14, 5)]
+const KINDRA_PATH := Vector2i(1, 4)
+const KINDRA_PATH_DOT := Vector2i(7, 4)
+const KINDRA_VERTICAL_PATH := Vector2i(7, 1)
+const KINDRA_HEDGE := Vector2i(2, 9)
+const KINDRA_SIGN := Vector2i(1, 6)
+const KINDRA_BOULDER := Vector2i(11, 7)
+const KINDRA_TREE_LEFT := Vector2i(0, 7)
+const KINDRA_TREE_RIGHT := Vector2i(14, 7)
 
 @onready var ground_layer: TileMapLayer = $GroundLayer
 @onready var obstacle_layer: TileMapLayer = $ObstacleLayer
@@ -133,6 +142,66 @@ func _build_map() -> void:
 
 	## Sign near rival clearing
 	obstacle_layer.set_cell(Vector2i(12, 14), src, MapTiles.SIGN)
+	_paint_dustway_theme()
+
+
+func _paint_dustway_theme() -> void:
+	for x in MAP_W:
+		for y in MAP_H:
+			var tile: Vector2i = KINDRA_GRASS_TILES[(x * 5 + y * 7) % KINDRA_GRASS_TILES.size()]
+			_set_kindra_ground(Vector2i(x, y), tile)
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+	for x in range(0, 12):
+		_set_kindra_ground(Vector2i(x, 41), KINDRA_PATH)
+	for y in range(5, 42):
+		for x in range(10, 13):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_VERTICAL_PATH if x == 11 else KINDRA_PATH_DOT)
+	for x in range(6, 16):
+		_set_kindra_ground(Vector2i(x, 20), KINDRA_PATH)
+
+	for x in MAP_W:
+		if x < 10 or x > 12:
+			_set_kindra_obstacle(Vector2i(x, 0), KINDRA_HEDGE)
+			_set_kindra_obstacle(Vector2i(x, MAP_H - 1), KINDRA_HEDGE)
+	for y in MAP_H:
+		if y < 40 or y > 42:
+			_set_kindra_obstacle(Vector2i(0, y), KINDRA_HEDGE)
+		_set_kindra_obstacle(Vector2i(MAP_W - 1, y), KINDRA_HEDGE)
+
+	for x in range(3, 10):
+		for y in range(29, 36):
+			if not (x == 6 and y == 32):
+				ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, MapTiles.TALL_GRASS)
+	for x in range(13, 20):
+		for y in range(30, 37):
+			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, MapTiles.TALL_GRASS)
+	for x in range(13, 18):
+		for y in range(22, 26):
+			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, MapTiles.TALL_GRASS)
+
+	for x in range(4, 10):
+		for y in range(22, 27):
+			var is_corner := (x == 4 or x == 9) and (y == 22 or y == 26)
+			if not is_corner:
+				ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, MapTiles.WATER)
+				obstacle_layer.set_cell(Vector2i(x, y), MapTiles.SRC_COLLISION, MapTiles.COLLISION)
+
+	for pos in [Vector2i(2, 29), Vector2i(2, 33), Vector2i(19, 30), Vector2i(19, 34), Vector2i(3, 21), Vector2i(3, 26), Vector2i(10, 24), Vector2i(8, 4)]:
+		_set_kindra_obstacle(pos, KINDRA_TREE_LEFT if pos.x < MAP_W / 2 else KINDRA_TREE_RIGHT)
+	for pos in [Vector2i(6, 40), Vector2i(12, 14), Vector2i(11, 1)]:
+		_set_kindra_obstacle(pos, KINDRA_SIGN)
+	for pos in [Vector2i(4, 44), Vector2i(8, 43), Vector2i(15, 42), Vector2i(17, 44)]:
+		_set_kindra_obstacle(pos, KINDRA_BOULDER)
+
+
+func _set_kindra_ground(tile: Vector2i, atlas: Vector2i) -> void:
+	ground_layer.set_cell(tile, MapTiles.SRC_KINDRA_SCREEN, atlas)
+
+
+func _set_kindra_obstacle(tile: Vector2i, atlas: Vector2i) -> void:
+	ground_layer.set_cell(tile, MapTiles.SRC_KINDRA_SCREEN, atlas)
+	obstacle_layer.set_cell(tile, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
 
 
 func _set_ground(x: int, y: int, tile: Vector2i) -> void:

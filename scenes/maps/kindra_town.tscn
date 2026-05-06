@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/kindra_town.gd" id="1_map"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
@@ -12,6 +12,9 @@ size = Vector2(16, 48)
 [sub_resource type="RectangleShape2D" id="garden_grass"]
 size = Vector2(64, 32)
 
+[sub_resource type="RectangleShape2D" id="door_shape"]
+size = Vector2(16, 16)
+
 [node name="KindraTown" type="Node2D"]
 script = ExtResource("1_map")
 
@@ -20,7 +23,7 @@ script = ExtResource("1_map")
 [node name="ObstacleLayer" type="TileMapLayer" parent="."]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
-position = Vector2(168, 360)
+position = Vector2(168, 328)
 
 [node name="ExitToDustway" type="Area2D" parent="."]
 position = Vector2(568, 248)
@@ -32,6 +35,61 @@ spawn_position = Vector2(24, 656)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitToDustway"]
 shape = SubResource("exit_east")
+
+[node name="DoorHome" type="Area2D" parent="."]
+position = Vector2(168, 424)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_home_interior.tscn"
+spawn_position = Vector2(120, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorHome"]
+shape = SubResource("door_shape")
+
+[node name="DoorMarket" type="Area2D" parent="."]
+position = Vector2(88, 296)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_shop_interior.tscn"
+spawn_position = Vector2(120, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorMarket"]
+shape = SubResource("door_shape")
+
+[node name="DoorHouseEast" type="Area2D" parent="."]
+position = Vector2(264, 296)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_house_interior.tscn"
+spawn_position = Vector2(120, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorHouseEast"]
+shape = SubResource("door_shape")
+
+[node name="DoorPyre" type="Area2D" parent="."]
+position = Vector2(344, 136)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_pyre_interior.tscn"
+spawn_position = Vector2(120, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorPyre"]
+shape = SubResource("door_shape")
+
+[node name="DoorElder" type="Area2D" parent="."]
+position = Vector2(88, 104)
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("4_transition")
+target_scene = "res://scenes/maps/kindra_elder_interior.tscn"
+spawn_position = Vector2(120, 120)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorElder"]
+shape = SubResource("door_shape")
 
 [node name="GardenEncounter" type="Area2D" parent="."]
 collision_layer = 8

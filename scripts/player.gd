@@ -12,6 +12,9 @@ signal tile_stepped
 const SPEED := 128.0
 # Size of one tile in pixels — used for grid-aligned movement
 const TILE_SIZE := 16
+const SPRITE_W := 16
+const SPRITE_H := 16
+const TRAINER_SHEET_PATH := "res://art/player/kindra_trainer_sheet.png"
 
 # Current facing direction for animation
 var facing := Vector2.DOWN
@@ -19,6 +22,7 @@ var facing := Vector2.DOWN
 var is_moving := false
 # Target position for grid-based movement
 var target_pos := Vector2.ZERO
+var map_bounds := Rect2()
 
 # Reference to the animated sprite
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -28,6 +32,7 @@ var joystick_input := Vector2.ZERO
 
 
 func _ready() -> void:
+	_apply_trainer_sheet()
 	# Snap to tile center (not corner) — floor to tile, then offset by half-tile
 	position = (position / float(TILE_SIZE)).floor() * TILE_SIZE + Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 	target_pos = position
@@ -127,6 +132,12 @@ func _get_input_direction() -> Vector2:
 ## Uses direct tile lookup on the obstacle layer (data-driven, like Pokémon)
 ## with a physics raycast as fallback for non-tile obstacles.
 func _can_move_to(target: Vector2) -> bool:
+	if map_bounds.size != Vector2.ZERO:
+		var min_pos := map_bounds.position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+		var max_pos := map_bounds.end - Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+		if target.x < min_pos.x or target.x > max_pos.x or target.y < min_pos.y or target.y > max_pos.y:
+			return false
+
 	## Direct tile check — any tile on the obstacle layer blocks movement
 	var tile_coord := Vector2i(int(target.x / TILE_SIZE), int(target.y / TILE_SIZE))
 	var obs := _get_obstacle_layer()
@@ -140,6 +151,10 @@ func _can_move_to(target: Vector2) -> bool:
 	query.exclude = [get_rid()]
 	var result := space.intersect_ray(query)
 	return result.is_empty()
+
+
+func set_map_bounds(bounds: Rect2) -> void:
+	map_bounds = bounds
 
 
 var _obs_layer_cache: TileMapLayer = null
@@ -169,3 +184,40 @@ func _play_walk() -> void:
 		Vector2.UP:    sprite.play("walk_up")
 		Vector2.LEFT:  sprite.play("walk_left")
 		Vector2.RIGHT: sprite.play("walk_right")
+
+
+func _apply_trainer_sheet() -> void:
+	var img := Image.new()
+	var err := img.load(ProjectSettings.globalize_path(TRAINER_SHEET_PATH))
+	if err != OK:
+		push_warning("player: could not load trainer sheet at %s" % TRAINER_SHEET_PATH)
+		return
+	var tex := ImageTexture.create_from_image(img)
+	var frames := sprite.sprite_frames
+	if frames == null:
+		return
+	for anim_name in frames.get_animation_names():
+		for i in frames.get_frame_count(anim_name):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = tex
+			atlas.region = _trainer_region_for_anim(String(anim_name), i)
+			var duration := frames.get_frame_duration(anim_name, i)
+			frames.set_frame(anim_name, i, atlas, duration)
+
+
+func _trainer_region_for_anim(anim_name: String, frame_idx: int) -> Rect2:
+	var row := 0
+	if anim_name.ends_with("_up"):
+		row = 1
+	elif anim_name.ends_with("_left"):
+		row = 2
+	elif anim_name.ends_with("_right"):
+		row = 3
+	var col := 0
+	if anim_name.begins_with("walk_"):
+		col = 1 if frame_idx == 0 else 3
+	return Rect2(col * SPRITE_W, row * SPRITE_H, SPRITE_W, SPRITE_H)
+
+
+func refresh_trainer_sheet() -> void:
+	_apply_trainer_sheet()

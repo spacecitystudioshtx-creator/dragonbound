@@ -19,6 +19,7 @@ var half_screen := Vector2.ZERO
 func _ready() -> void:
 	# Calculate half-screen from the project's viewport size
 	half_screen = get_viewport_rect().size / 2.0
+	position = Vector2.ZERO
 	# Make this camera active
 	make_current()
 
@@ -30,11 +31,23 @@ func _process(_delta: float) -> void:
 
 ## Clamp the camera so it never shows area outside the map.
 func _clamp_to_bounds() -> void:
-	var pos := global_position
-	pos.x = clamp(pos.x, map_rect.position.x + half_screen.x + margin.x,
-		map_rect.end.x - half_screen.x - margin.x)
-	pos.y = clamp(pos.y, map_rect.position.y + half_screen.y + margin.y,
-		map_rect.end.y - half_screen.y - margin.y)
+	var target := get_parent() as Node2D
+	var pos := target.global_position if target else global_position
+	var min_x := map_rect.position.x + half_screen.x + margin.x
+	var max_x := map_rect.end.x - half_screen.x - margin.x
+	var min_y := map_rect.position.y + half_screen.y + margin.y
+	var max_y := map_rect.end.y - half_screen.y - margin.y
+
+	if min_x > max_x:
+		pos.x = map_rect.get_center().x
+	else:
+		pos.x = clamp(pos.x, min_x, max_x)
+
+	if min_y > max_y:
+		pos.y = map_rect.get_center().y
+	else:
+		pos.y = clamp(pos.y, min_y, max_y)
+
 	global_position = pos
 
 
@@ -42,3 +55,6 @@ func _clamp_to_bounds() -> void:
 ## Call this from the map script when the map loads.
 func set_bounds(rect: Rect2) -> void:
 	map_rect = rect
+	var player := get_parent()
+	if player and player.has_method("set_map_bounds"):
+		player.set_map_bounds(rect)

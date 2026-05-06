@@ -19,6 +19,14 @@ extends Node
 ## Atlas source ids
 const SRC_GROUND := 0
 const SRC_VILLAGE := 1
+const SRC_KINDRA_SCREEN := 2
+const SRC_COLLISION := 3
+const SRC_INTERIOR := 4
+const SRC_ROOM_HOME := 5
+const SRC_ROOM_SHOP := 6
+const SRC_ROOM_HOUSE := 7
+const SRC_ROOM_PYRE := 8
+const SRC_ROOM_ELDER := 9
 
 ## ── Ground strip indices (source 0) ──────────────────────────────────────────
 const GRASS        := Vector2i(0, 0)
@@ -37,6 +45,25 @@ const FENCE        := Vector2i(12, 0)
 const SIGN         := Vector2i(13, 0)
 const STUMP        := Vector2i(14, 0)
 const ROCK         := Vector2i(15, 0)
+const COLLISION    := Vector2i(0, 0)
+
+## ── Interior atlas indices (source 4) ───────────────────────────────────────
+const INT_FLOOR      := Vector2i(0, 0)
+const INT_FLOOR_ALT  := Vector2i(1, 0)
+const INT_WALL_TOP   := Vector2i(2, 0)
+const INT_WALL_MID   := Vector2i(3, 0)
+const INT_WALL_SIDE  := Vector2i(4, 0)
+const INT_RUG        := Vector2i(5, 0)
+const INT_TABLE      := Vector2i(6, 0)
+const INT_CHAIR      := Vector2i(7, 0)
+const INT_COUNTER    := Vector2i(8, 0)
+const INT_SHELF      := Vector2i(9, 0)
+const INT_PLANT      := Vector2i(10, 0)
+const INT_BED        := Vector2i(11, 0)
+const INT_PC         := Vector2i(12, 0)
+const INT_TV         := Vector2i(13, 0)
+const INT_STAIRS     := Vector2i(14, 0)
+const INT_EXIT_MAT   := Vector2i(15, 0)
 
 ## Back-compat aliases (old map scripts expected these names from the 10-tile
 ## strip). Kept so existing scripts don't all have to change at once.

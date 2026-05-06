@@ -6,26 +6,28 @@
 extends Node2D
 
 # ── Layout ───────────────────────────────────────────────────────────────────
-const VP_W    := 320
-const VP_H    := 180
-const FIELD_H := 120   ## Pixels for the battle field
-const PANEL_H := 60    ## Pixels for the bottom UI panel
-const BTN_W   := 160
-const BTN_H   := 30
+const VP_W    := 240
+const VP_H    := 160
+const FIELD_H := 112   ## Pixels for the battle field
+const PANEL_H := 48    ## Pixels for the bottom UI panel
+const BTN_W   := 120
+const BTN_H   := 24
 
-# ── Palette (FireRed-matched) ────────────────────────────────────────────────
-const C_FIELD      := Color(0.55, 0.78, 0.55)  ## Green grass field
-const C_FIELD_TOP  := Color(0.60, 0.82, 0.92)  ## Sky blue gradient top
-const C_PLATFORM   := Color(0.48, 0.62, 0.38)  ## Grassy platform shadow
-const C_PANEL      := Color(0.96, 0.94, 0.88)  ## Cream white panel (FireRed style)
-const C_BORDER     := Color(0.20, 0.22, 0.25)  ## Dark border
-const C_TEXT       := Color(0.12, 0.12, 0.15)  ## Dark text on light panel
+# ── Palette ─────────────────────────────────────────────────────────────────
+const C_FIELD      := Color(0.58, 0.78, 0.50)
+const C_FIELD_TOP  := Color(0.66, 0.82, 0.92)
+const C_PLATFORM   := Color(0.48, 0.62, 0.38)
+const C_PANEL      := Color(0.96, 0.94, 0.86)
+const C_PANEL_DARK := Color(0.66, 0.60, 0.52)
+const C_BORDER     := Color(0.16, 0.18, 0.22)
+const C_BORDER_LIT := Color(1.00, 0.98, 0.92)
+const C_TEXT       := Color(0.12, 0.12, 0.15)
 const C_HP_HIGH    := Color(0.20, 0.85, 0.20)
 const C_HP_MED     := Color(0.90, 0.85, 0.10)
 const C_HP_LOW     := Color(0.90, 0.20, 0.10)
 const C_HP_BG      := Color(0.18, 0.18, 0.20)
-const C_BTN        := Color(0.92, 0.90, 0.85)  ## Light button (FireRed style)
-const C_BTN_BORDER := Color(0.35, 0.38, 0.42)  ## Medium gray border
+const C_BTN        := Color(0.94, 0.92, 0.86)
+const C_BTN_BORDER := Color(0.35, 0.38, 0.42)
 
 ## Tint colors for placeholder drake rectangles
 const DRAKE_COL := {
@@ -81,28 +83,29 @@ func _ready() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _build_ui() -> void:
-	## Field background — sky gradient top half, grass bottom half (FireRed style)
-	_add_rect(Vector2.ZERO, Vector2(VP_W, 60), C_FIELD_TOP)
-	_add_rect(Vector2(0, 60), Vector2(VP_W, 60), C_FIELD)
+	## Field background.
+	_add_rect(Vector2.ZERO, Vector2(VP_W, 58), C_FIELD_TOP)
+	_add_rect(Vector2(0, 58), Vector2(VP_W, FIELD_H - 58), C_FIELD)
+	for x in range(0, VP_W, 16):
+		_add_rect(Vector2(x, 86 + ((x / 16) % 2) * 4), Vector2(6, 1), C_FIELD.darkened(0.10))
 
-	## Oval platform shadows (ellipse effect via stacked rects)
-	_draw_platform(38, 60, 50)    ## enemy platform
-	_draw_platform(262, 96, 50)   ## player platform
+	## FireRed-style staging: enemy up/right, player down/left.
+	_draw_platform(188, 70, 38)   ## enemy platform
+	_draw_platform(58, 98, 44)    ## player platform
 
-	## Drake sprites (48x48 for better visibility)
-	_enemy_sprite = _create_drake_visual(Vector2(22, 10), Vector2(48, 48), _enemy)
-	_player_sprite = _create_drake_visual(Vector2(246, 46), Vector2(48, 48), _player)
+	## Drake sprites.
+	_enemy_sprite = _create_drake_visual(Vector2(158, 18), Vector2(62, 58), _enemy)
+	_player_sprite = _create_drake_visual(Vector2(24, 54), Vector2(64, 58), _player)
 
 	## Info boxes
-	_build_info_box(Vector2(148, 6),  _enemy,  true)
-	_build_info_box(Vector2(4,   70), _player, false)
+	_build_info_box(Vector2(8, 6), _enemy, true)
+	_build_info_box(Vector2(118, 74), _player, false)
 
 	## Bottom panel
-	_add_rect(Vector2(0, FIELD_H), Vector2(VP_W, PANEL_H), C_PANEL)
-	_add_rect(Vector2(0, FIELD_H), Vector2(VP_W, 2), C_BORDER)
+	_draw_frame(Vector2(0, FIELD_H), Vector2(VP_W, PANEL_H), C_PANEL, 2)
 
 	## Message label (full panel area)
-	_msg_label = _add_label(Vector2(8, FIELD_H + 6), Vector2(VP_W - 16, PANEL_H - 10), "")
+	_msg_label = _add_label(Vector2(12, FIELD_H + 8), Vector2(VP_W - 24, PANEL_H - 14), "")
 	_msg_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 
 	## Move buttons — 2×2 grid filling the panel
@@ -130,26 +133,25 @@ func _build_ui() -> void:
 
 
 func _build_info_box(pos: Vector2, drake: DrakeInstance, is_enemy: bool) -> void:
-	## FireRed-style info box: white fill with dark border
-	_add_rect(pos - Vector2(1, 1), Vector2(162, 48), C_BORDER)  ## border
-	_add_rect(pos, Vector2(160, 46), Color(0.96, 0.94, 0.88))   ## white fill
+	_draw_frame(pos - Vector2(1, 1), Vector2(112, 36), Color(0.96, 0.94, 0.86), 1)
 
-	var name_lbl := _add_label(pos + Vector2(4, 3), Vector2(152, 12),
+	var name_lbl := _add_label(pos + Vector2(4, 2), Vector2(104, 11),
 			drake.nickname + "  Lv" + str(drake.level))
 	if not is_enemy:
 		_player_name_label = name_lbl
 
-	var hp_lbl := _add_label(pos + Vector2(4, 16), Vector2(152, 10), "HP")
+	var hp_lbl := _add_label(pos + Vector2(4, 13), Vector2(104, 10), "HP")
 	if is_enemy:
 		_enemy_hp_label = hp_lbl
 	else:
 		_player_hp_label = hp_lbl
 
 	## HP bar background
-	_add_rect(pos + Vector2(4, 28), Vector2(150, 7), C_HP_BG)
+	_add_rect(pos + Vector2(4, 25), Vector2(100, 7), C_BORDER)
+	_add_rect(pos + Vector2(5, 26), Vector2(98, 5), C_HP_BG)
 
 	## HP bar fill (tracked by ref)
-	var bar := _add_rect(pos + Vector2(4, 28), Vector2(150, 7), C_HP_HIGH)
+	var bar := _add_rect(pos + Vector2(5, 26), Vector2(98, 5), C_HP_HIGH)
 	if is_enemy:
 		_enemy_hp_bar = bar
 	else:
@@ -226,7 +228,7 @@ func _update_hp_bars() -> void:
 
 func _update_one_bar(drake: DrakeInstance, bar: ColorRect, lbl: Label, is_enemy: bool) -> void:
 	var pct := float(drake.current_hp) / float(drake.get_max_hp())
-	bar.size.x = 150.0 * clampf(pct, 0.0, 1.0)
+	bar.size.x = 98.0 * clampf(pct, 0.0, 1.0)
 	bar.color   = C_HP_HIGH if pct > 0.5 else (C_HP_MED if pct > 0.25 else C_HP_LOW)
 	lbl.text    = "HP %d/%d" % [drake.current_hp, drake.get_max_hp()] if not is_enemy else "HP"
 
@@ -524,6 +526,9 @@ func _draw_platform(cx: int, cy: int, rx: int) -> void:
 		var half_w := int(float(rx) * sqrt(1.0 - float(dy * dy) / float(ry * ry)))
 		var shade := C_PLATFORM.darkened(0.1 + 0.15 * (float(dy) / float(ry)))
 		_add_rect(Vector2(cx - half_w, cy + dy), Vector2(half_w * 2, 1), shade)
+	for dy in range(-2, 3):
+		var half_w := int(float(rx - 10) * sqrt(1.0 - float(dy * dy) / 9.0))
+		_add_rect(Vector2(cx - half_w, cy + dy), Vector2(half_w * 2, 1), C_PLATFORM.lightened(0.12))
 
 func _create_drake_visual(pos: Vector2, sz: Vector2, drake: DrakeInstance) -> Control:
 	var name_lower := drake.data.drake_name.to_lower()
@@ -562,6 +567,13 @@ func _add_rect(pos: Vector2, sz: Vector2, color: Color, border_only: bool = fals
 	return r
 
 
+func _draw_frame(pos: Vector2, sz: Vector2, fill: Color, inset: int = 2) -> void:
+	_add_rect(pos, sz, C_BORDER)
+	_add_rect(pos + Vector2(inset, inset), sz - Vector2(inset * 2, inset * 2), C_PANEL_DARK)
+	_add_rect(pos + Vector2(inset + 1, inset + 1), sz - Vector2((inset + 1) * 2, (inset + 1) * 2), fill)
+	_add_rect(pos + Vector2(inset + 2, inset + 2), Vector2(sz.x - (inset + 2) * 2, 1), C_BORDER_LIT)
+
+
 func _add_label(pos: Vector2, sz: Vector2, text: String) -> Label:
 	var lbl := Label.new()
 	lbl.position = pos
@@ -587,16 +599,20 @@ func _make_button(pos: Vector2, sz: Vector2, text: String) -> Button:
 	normal.bg_color     = C_BTN
 	normal.border_color = C_BTN_BORDER
 	normal.set_border_width_all(1)
+	normal.corner_radius_top_left = 0
+	normal.corner_radius_top_right = 0
+	normal.corner_radius_bottom_left = 0
+	normal.corner_radius_bottom_right = 0
 	btn.add_theme_stylebox_override("normal", normal)
 
 	var hover := StyleBoxFlat.new()
-	hover.bg_color     = Color(0.82, 0.80, 0.75)
+	hover.bg_color     = Color(0.86, 0.84, 0.78)
 	hover.border_color = Color(0.15, 0.15, 0.18)
 	hover.set_border_width_all(1)
 	btn.add_theme_stylebox_override("hover", hover)
 
 	var pressed_sb := StyleBoxFlat.new()
-	pressed_sb.bg_color     = Color(0.72, 0.70, 0.65)
+	pressed_sb.bg_color     = Color(0.78, 0.76, 0.70)
 	pressed_sb.border_color = Color(0.10, 0.10, 0.12)
 	pressed_sb.set_border_width_all(1)
 	btn.add_theme_stylebox_override("pressed", pressed_sb)
