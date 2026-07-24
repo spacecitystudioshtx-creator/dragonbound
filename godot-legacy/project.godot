@@ -35,6 +35,8 @@ SaveSystem="*res://scripts/save_system.gd"
 DialogBox="*res://scenes/ui/dialog_box.tscn"
 BattleManager="*res://scripts/battle/battle_manager.gd"
 DrakeSprites="*res://scripts/drake_sprites.gd"
+ThemeColors="*res://scripts/theme_colors.gd"
+NPCSpawner="*res://scripts/npc_spawner.gd"
 
 [display]
 

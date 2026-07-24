@@ -1,0 +1,51 @@
+{
+  "id": "kindra_town",
+  "name": "KINDRA TOWN",
+  "legend": {
+    "T": { "tile": "tree" },
+    ".": { "tile": "grass" },
+    ",": { "tile": "grass_pale" },
+    "f": { "tile": "flowers" },
+    "~": { "tile": "water" },
+    "p": { "tile": "path" },
+    "R": { "tile": "roof" },
+    "S": { "tile": "stone_wall" },
+    "W": { "tile": "wood_wall" },
+    "w": { "tile": "window" },
+    "D": { "tile": "door", "dialog": "kindra.door_locked" },
+    "d": { "tile": "door", "dialog": "kindra.pyre_door" },
+    "n": { "tile": "sign", "dialog": "kindra.sign_north" },
+    "s": { "tile": "sign", "dialog": "kindra.sign_east" },
+    "o": { "tile": "well" }
+  },
+  "rows": [
+    "TTTTTTTTTTTTTTTTTTTTTT",
+    "T........TnT.........T",
+    "T.......RRRRRR.......T",
+    "T.......SSdSSS.......T",
+    "T........,p,.........T",
+    "T.RRRRR...p....RRRRR.T",
+    "T.WwDwW...p....WwDwW.T",
+    "T.........p......s...T",
+    "T.pppppppppppppppppp..",
+    "T......o....ff.......T",
+    "T..~~~~......ff......T",
+    "T..~~~~..............T",
+    "T..,,..........,,....T",
+    "T....................T",
+    "TTTTTTTTTTTTTTTTTTTTTT"
+  ],
+  "npcs": [
+    { "id": "elder_moss", "x": 9, "y": 4, "sprite": "villager_c", "facing": "down", "dialog": "kindra.elder_moss" },
+    { "id": "neighbor_fen", "x": 16, "y": 7, "sprite": "villager_a", "facing": "down", "dialog": "kindra.neighbor_fen" },
+    { "id": "shopkeeper", "x": 5, "y": 7, "sprite": "villager_b", "facing": "down", "dialog": "kindra.shopkeeper" }
+  ],
+  "exits": [
+    { "x": 21, "y": 8, "to": "dustway_route", "spawn": "west" },
+    { "x": 20, "y": 8, "to": "dustway_route", "spawn": "west" }
+  ],
+  "spawns": {
+    "default": { "x": 10, "y": 8, "facing": "down" },
+    "from_dustway": { "x": 19, "y": 8, "facing": "left" }
+  }
+}

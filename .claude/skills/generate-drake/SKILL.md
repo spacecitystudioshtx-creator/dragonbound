@@ -26,10 +26,11 @@ Moves must follow the existing schema in `data/moves.json`. Effect must be one o
 3. **Draft any new moves** — ideally 2-3 signature moves per stage. Use existing moves where possible; only add new ones that are thematically essential.
 4. **Write changes** — use Edit/Write to extend the JSON files. Preserve file formatting and the leading `_schema_version` / `_doc` keys.
 5. **Validate** — run `python3 tools/validate_data.py`. If it reports errors, fix and re-run until clean.
-6. **Queue a sprite brief** — append an entry to `data/sprite_briefs.json` describing the visual (pose, colors, silhouette) so when Stable Diffusion is available we can batch-generate sprites. Format:
+6. **Queue a sprite brief** — append an entry to `data/sprite_briefs.json` describing the visual (pose, colors, silhouette) for the sprite generator (`tools/generate_sprites.py`). Format:
    ```json
    {"drake_id": "...", "brief": "16x16 pixel art, ...", "queued_at": "ISO timestamp"}
    ```
+   The game renders a colored placeholder for any drake without a sprite, so the drake is playable immediately. When a real sprite is generated into `art/drakes/<id>_front.png`, also copy it to `public/assets/drakes/` so the web build picks it up.
 7. **Summarize** — report to the user: what was added, its synergy neighbors, and what the next-step creative call is (evolution naming, next drake to design, etc.).
 
 ## Stat guidance reference

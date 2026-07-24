@@ -1,6 +1,8 @@
-# Godot 4 .gitignore
+# Web build
+node_modules/
+dist/
 
-# Godot-specific ignores
+# Godot legacy ignores
 .godot/
 *.translation
 
@@ -30,3 +32,6 @@ build/
 .mono/
 data_*/
 mono_crash.*.json
+
+# Claude session worktrees
+.claude/worktrees/

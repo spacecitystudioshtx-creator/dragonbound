@@ -1,0 +1,37 @@
+{
+  "id": "scald_gate",
+  "name": "THE SCALD — GATE",
+  "legend": {
+    "S": { "tile": "stone_wall" },
+    "B": { "tile": "brick" },
+    ".": { "tile": "grass_pale" },
+    ",": { "tile": "grass" },
+    "p": { "tile": "path" },
+    "r": { "tile": "rock" },
+    "G": { "tile": "door", "dialog": "scald_gate.gate" },
+    "x": { "tile": "torch" }
+  },
+  "rows": [
+    "SSSSSSSSSSSSSSSSSS",
+    "S................S",
+    "S.....BBBBBB.....S",
+    "S.....BBGBBB.....S",
+    "S......x.x.......S",
+    "S.......p........S",
+    ".pppppppp........S",
+    "S..r.........r...S",
+    "S....,,......,,..S",
+    "S................S",
+    "SSSSSSSSSSSSSSSSSS"
+  ],
+  "npcs": [
+    { "id": "warden_brask", "x": 10, "y": 5, "sprite": "villager_b", "facing": "left", "dialog": "scald_gate.brask" }
+  ],
+  "exits": [
+    { "x": 0, "y": 6, "to": "dustway_route", "spawn": "from_scald" }
+  ],
+  "spawns": {
+    "default": { "x": 1, "y": 6, "facing": "right" },
+    "west": { "x": 1, "y": 6, "facing": "right" }
+  }
+}

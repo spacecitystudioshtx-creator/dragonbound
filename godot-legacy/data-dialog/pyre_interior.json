@@ -1,0 +1,23 @@
+{
+  "_schema_version": 1,
+  "_doc": "Dialog for The Pyre interior — Elder Moss and sacred fire shrine.",
+  "npcs": {
+    "elder_moss": {
+      "name": "Elder Moss",
+      "intro": [
+        "Ah. The fire brought you here.",
+        "Every generation, one young soul is drawn to this shrine before the journey begins.",
+        "The drakes sense it before we do.",
+        "This one has been restless for weeks. It was waiting for you.",
+        {"set_flag": "starter_given"},
+        "Walk east along the Dustway. Let it show you what it can do.",
+        "When you have faced Warden Brask at the Scald and proven your bond — come back. The north gate will open."
+      ],
+      "post_starter": [
+        "The Dustway stretches east from town.",
+        "Wild drakes hide in the tall grass — battle them. Your partner grows stronger with every fight.",
+        "Warden Brask waits at the Scald. She will test you both."
+      ]
+    }
+  }
+}

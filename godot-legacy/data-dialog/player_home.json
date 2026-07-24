@@ -1,0 +1,13 @@
+{
+  "_schema_version": 1,
+  "_doc": "Dialog for the Player's Home interior.",
+  "npcs": {
+    "save_computer": {
+      "lines": [
+        "The terminal hums softly.",
+        {"save_game": true},
+        "Progress saved."
+      ]
+    }
+  }
+}

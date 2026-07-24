@@ -1,0 +1,14 @@
+{
+  "_schema_version": 1,
+  "_doc": "Trainer battle definitions. '$rival_starter' resolves to the type-advantaged counter of the player's starter at battle start.",
+  "trainers": {
+    "rival_sable_1": {
+      "name": "Sable",
+      "team": [
+        { "drake": "$rival_starter", "level": 6 }
+      ],
+      "win_flag": "sable_1_beaten",
+      "reward_text": "Sable: Tch. Enjoy it while it lasts. The Scald will eat you alive."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "_schema_version": 2,
+  "_doc": "NPC dialog for the Scald gate.",
+  "npcs": {
+    "brask": {
+      "name": "Warden Brask",
+      "select": [
+        { "if_flag": "sable_1_beaten", "use": "acknowledged" },
+        { "use": "dismissive" }
+      ],
+      "sections": {
+        "dismissive": [
+          "The Scald isn't a place. It's a verdict.",
+          "You haven't even settled things with that Sable kid on the route.",
+          "Come back when your drake has scars worth reading."
+        ],
+        "acknowledged": [
+          "Hm. Sable came through here muttering about you.",
+          "So the ember generation has teeth after all.",
+          "The trial cave isn't ready for visitors yet. Soon, hatchling. Soon."
+        ]
+      }
+    },
+    "gate": { "text": "A gate of scorched brick. The heat behind it hums like a heartbeat. It will not open — yet." }
+  }
+}

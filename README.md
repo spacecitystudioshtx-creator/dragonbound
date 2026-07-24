@@ -1,24 +1,30 @@
 # Dragonbound
 
-A Pokémon FireRed-style 2D pixel art creature collector RPG for iOS. Collect, battle, and evolve dragon-themed creatures called **Drakes**. Built with an AI-first content pipeline so the world builds itself from creative direction.
+A Pokémon FireRed-style 2D pixel art creature collector RPG that runs in any web browser. Collect, battle, and evolve dragon-themed creatures called **Drakes**. Built with an AI-first content pipeline so the world builds itself from creative direction.
 
-## Status (as of 2026-04-14)
+## Status (as of 2026-07-24)
 
-**Playable scaffolding:** grid movement, 3 connected zones (Kindra → Dustway → Zone 2), turn-based battle framework, 12 drakes with moves + synergies, FireRed-style dialog textbox, auto-save. Running in Godot 4.6, CC0 art.
+**Engine pivot complete: Godot → TypeScript + Phaser 4 + Vite.** The game now runs in the browser. The old Godot project is archived in `godot-legacy/` (delete once we're confident nothing else needs porting).
 
-**What works end-to-end:** walking, scene transitions, wild encounters, starter gift, save/load.
-**Not wired yet:** NPCs in the overworld, trial wardens, battle UI against trainers, music, item/bag system.
+**Playable end-to-end today:** title screen → new game/continue → Kindra town → starter choice from Elder Moss (Ember/Ripple/Sprig, sprites on screen) → Dustway Route 1 wild encounters → full FireRed-style battle (fight/runestone-catch/swap/run, type chart, XP, level-ups, evolution) → rival Sable trainer battle (picks your counter) → Scald gate + Warden Brask (flag-aware dialog) → auto-save to localStorage, whiteout on party wipe.
 
-## Next steps
+**Verified by automated in-browser playtest**: the whole loop above was driven end-to-end by the built-in test harness (see Dev Workflow).
 
-1. **Playtest the scaffolding.** Open the project in Godot, walk Kindra → Dustway → Zone 2, trigger an encounter, finish a battle. File whatever breaks.
-2. **Design Warden Brask + The Scald.** First real boss. Add his team + dialog + the cave zone — use `/generate-zone` and `/generate-drake` skills.
-3. **Queue nightly briefs.** Drop 2–3 creative prompts into `data/brief_queue.json` each evening (new drake line, a route, an NPC). The 02:16 AM task drafts them overnight.
-4. **NPC interaction.** Add walk-up-to-NPC triggers that emit `SignalBus.dialog_requested` — unlocks the dialog system already built.
-5. **Trainer battles.** Extend `battle_manager` to accept a team instead of a single wild drake; wire Sable's first encounter.
-6. **Sprites for drakes 2+.** Current 12 front sprites are stub-quality. Queue sprite briefs in `data/sprite_briefs.json` for the Stable Diffusion pass once it's online.
+### How to run
+```
+npm install
+npm run dev      # → http://localhost:5173
+```
+Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (cancel). `npm run typecheck` for TS, `python3 tools/validate_data.py` for content.
 
-Further out: music pass, iOS build, Roost base, Rift system.
+### Next steps
+1. **Content wave** — use `/generate-drake` + `/generate-zone` to grow toward the 30-drake / 3-zone MVP. The pipeline is fully data-driven now: new zones and drakes need **zero engine code**.
+2. **The Scald trial** — Warden Brask's cave zone + boss battle (extend trainers.json to multi-drake teams — already supported).
+3. **Bench synergy combos** — data exists in `data/synergies.json`; battle UI hook not built yet. This is the flagship differentiator.
+4. **Party/Codex menu** — view drakes outside battle, reorder party.
+5. **Audio** — chiptune loop for town/route/battle (Web Audio, no assets yet).
+6. **Mobile controls** — touch D-pad + A/B overlay (the game already scales to phone screens; it just needs inputs).
+7. **Deploy** — `npm run build` produces a static site; host anywhere (GitHub Pages / itch.io / Cloudflare).
 
 ---
 
@@ -44,9 +50,9 @@ Further out: music pass, iOS build, Roost base, Rift system.
 
 ### Combat
 - **Turn-based, 1v1 battles** (like Pokemon)
-- **Type effectiveness** — 18 types (12 common + 6 rare)
+- **Type effectiveness** — 18 types planned (12 common + 6 rare); 4 wired so far
 - **4 moves per drake**, learn more and swap freely outside battle
-- **Catch mechanic** — Runestones (not Pokeballs), skill/timing element
+- **Catch mechanic** — Runestones (not Pokeballs), weaken-then-throw
 
 ### Type System (18 Types)
 
@@ -79,8 +85,8 @@ Void, Celestial, Ancient, Spirit, Crystal, Blood
 ## World Structure
 
 ### MVP (3 Zones)
-1. **Starter Zone** — Your hometown + first route. Choose from 3 starter drakes. Rival introduction.
-2. **Zone 2** — First wild area with diverse encounters. First Trial Warden.
+1. **Starter Zone** — Kindra town + Dustway Route 1. Choose from 3 starter drakes. Rival introduction. ✅ built
+2. **The Scald** — Warden Brask's volcanic trial cave. Gate zone built; trial interior next.
 3. **Zone 3** — Harder area, second Trial Warden. Rival rematch.
 
 ### Full Game (10 Zones at Launch)
@@ -111,35 +117,56 @@ Void, Celestial, Ancient, Spirit, Crystal, Blood
 | HM/TM | Scrolls |
 
 ## Tech Stack
-- **Engine:** Godot 4.4 + GDScript
-- **Maps:** Tiled map editor + JSON import
-- **Art:** AI-generated pixel sprites (Stable Diffusion, local on Mac Mini)
-- **Music:** Chiptune, AI-generated or free tools (BeepBox, Suno)
+- **Engine:** TypeScript + [Phaser 4](https://phaser.io) + Vite — runs in any browser, deploys as a static site
+- **Resolution:** GBA-native 240×160, integer-scaled, `pixelArt` rendering; Press Start 2P font
+- **Maps:** JSON (ASCII grid + legend) in `data/maps/` — no map editor needed, AI-writable
+- **Art:** CC0 tilesets (16×16) + AI-generated drake sprites (80×80, Stable Diffusion via `tools/generate_sprites.py`)
+- **Music:** Chiptune, AI-generated or free tools (BeepBox, Suno) — not wired yet
 - **Content Pipeline:** All game content defined in JSON. AI generates from creative briefs.
-- **Platform:** iOS (App Store), expandable to Android/Steam later
+- **Platform:** Web first (desktop + mobile browsers). iOS/Android later via Capacitor wrap if wanted.
+
+## Repo Layout
+```
+index.html, vite.config.ts     web app entry
+src/main.ts                    Phaser config + automated playtest harness
+src/core/                      db (JSON access), drake instances, battle math, state/save, tile registry
+src/scenes/                    Boot, Title, World (data-driven maps), Battle, Debug tile viewer
+src/ui/Textbox.ts              FireRed textbox + choice menus
+data/                          THE GAME — drakes, moves, types, synergies, trainers, maps/, dialog/
+art/                           source art (tilesets, drake sprites); copies served from public/assets/
+tools/                         validate_data.py (content CI), generate_sprites.py (SD sprite gen)
+godot-legacy/                  archived Godot prototype
+```
 
 ## AI Content Pipeline
 
 ### How It Works
 1. You write a creative brief (in `data/brief_queue.json` for overnight, or inline during a session).
 2. You invoke a skill (`/generate-drake`, `/generate-zone`, `/generate-dialog`), or wait for the nightly task.
-3. The skill generates validated content and appends it to `data/` — new drakes, moves, zones, dialog.
-4. `tools/validate_data.py` checks that every reference resolves before anything commits.
-5. You review the diff in the morning, tweak direction, or approve.
+3. The skill generates validated content and appends it to `data/` — new drakes, moves, zones, dialog. **No engine code needed for any of these.**
+4. `python3 tools/validate_data.py` checks every cross-reference (moves, evolutions, map legends, exits, dialog refs, trainers) before anything commits.
+5. Claude playtests the change in a real browser via the built-in harness, screenshots it, and reports.
 
 ### Data Schemas (Implemented)
 - `data/drakes.json`    — all creature definitions (type, class, stats, evolution, base_moves)
 - `data/moves.json`     — all move definitions (type, power, accuracy, effect)
 - `data/types.json`     — type effectiveness chart
 - `data/synergies.json` — bench-combo moves + placeholder passive bonuses
-- `data/dialog/*.json`  — NPC + sign dialog trees (one file per zone)
-- `data/sprite_briefs.json` — queue of sprite prompts for when Stable Diffusion is online
+- `data/trainers.json`  — trainer battles (`$rival_starter` resolves to your starter's counter)
+- `data/maps/*.json`    — zones: ASCII rows + legend + NPCs + exits + spawns + encounters
+- `data/dialog/*.json`  — NPC/sign dialog, schema v2: flag-branched sections + inline commands
+- `data/sprite_briefs.json` — queue of sprite prompts for the Stable Diffusion pass
 - `data/brief_queue.json`   — overnight creative-brief queue
 
 ### Skills (`.claude/skills/`)
-- **generate-drake**  — brief → new species + any moves it needs
-- **generate-zone**   — brief → Godot scene + map script + encounter tables + return transition
-- **generate-dialog** — brief → dialog tree for a zone's NPCs/signs
+- **generate-drake**  — brief → new species + any moves it needs (placeholder sprite auto-renders until art lands)
+- **generate-zone**   — brief → map JSON + dialog + encounters + two-way exits
+- **generate-dialog** — brief → flag-aware dialog for a zone's NPCs/signs
+
+### Dev Workflow (how Claude iterates)
+- `.claude/launch.json` starts `npm run dev` on port 5173 for the in-app browser.
+- `src/main.ts` exposes a console harness: `__seq('z','up','left')`, `__tap('right')`, `__pump(ms)`, `__state` — Claude drives full playthroughs headlessly (works even when the tab is hidden and rAF is paused) and verifies with screenshots.
+- `/?debug=tiles` (or `characters`, `player`, `things`) shows every sheet frame with its index — used to keep `src/core/tiles.ts` honest.
 
 ### Nightly AFK pipeline
 A scheduled task runs at 02:16 AM daily. It reads `data/brief_queue.json`, processes up to 3 pending briefs through the appropriate skill, validates, and commits the batch. Morning log in `data/nightly_log.md`.
@@ -152,54 +179,25 @@ Pokémon FireRed / LeafGreen (GBA Gen 3). That is the single reference point for
 ### Tiles & Overworld
 - **16×16 px tiles**, nearest-neighbor scaling (no anti-aliasing, ever)
 - Top-down tile grid, FireRed camera locked to player
-- Character walk cycle: 16×16, 4 frames per direction (Ninja Adventure CC0 pack)
-- Tile assets: `art/tilesets/ninja_adventure/`
+- Current tile source: `art/tilesets/basictiles.png` (CC0), indices mapped in `src/core/tiles.ts`
 
 ### Drake Battle Sprites — Target Style
 Reference image: official Gen-3 Pokémon battle sprites (FireRed, Emerald era).
 
 | Property | Spec |
 |---|---|
-| **Resolution** | 80×80 px stored; displayed at 52×52 in battle |
-| **Background** | Pure black (#000000) |
+| **Resolution** | 80×80 px stored; shown near-native in battle |
+| **Background** | Transparent (flood-filled from black by the generator) |
 | **Outline** | Bold 1–2 px black, no anti-aliasing |
 | **Shading** | Flat cell shading only — no gradients, no airbrushing |
 | **Palette** | Limited GBA-style (~32 colors max per sprite) |
-| **Pose** | Front 3/4 view, facing the viewer, bipedal stance |
+| **Pose** | Front 3/4 view, facing the viewer |
 | **Silhouette** | Strong, readable at small size |
 
-**What makes it look right:**
-- Dark background so the outline pops
-- 2–3 flat tones per color region (base, one highlight, one shadow) — no smooth blending
-- Chunky, readable pixels visible even at 52 px display size
-- Creature fills ~70–80% of the canvas
-- Scales, plates, spikes described by shape and color, not texture
-
-**What to avoid:**
-- Smooth gradients / airbrush / painterly style
-- White or gradient backgrounds
-- Anime/chibi proportions
-- Overly cute or overly realistic — Gen-3 sits in the middle: fierce but stylized
-
 ### Adding a New Drake Sprite
-1. Open `scripts/tools/sprite_generator.gd`
-2. Add a `_add("your_id", "description")` call in `_build_sprite_list()`
-3. Write the description as **shapes + flat colors only**:
-   - ✅ `"dark navy scales, cream segmented underbelly, large crimson bat wings, ivory spine spikes, glowing red eyes"`
-   - ❌ `"cool blue dragon with awesome wings and scary look"`
-4. Run the scene in Godot, paste your HuggingFace token, click Generate All
-5. Restart Godot → PNG auto-imports and shows up in battle immediately
-
-## Engine Architecture
-- `project.godot` autoloads (load order matters):
-  - `SignalBus` — global event bus (dialog/battle/menu/save signals)
-  - `GameMode`  — mode stack (OVERWORLD / DIALOG / BATTLE / MENU / TRANSITION)
-  - `DrakeDatabase` — loads `data/*.json` and exposes `drakes`, `moves`, `make_drake`, `get_combo_move`, `type_effectiveness`
-  - `GameState` — party, flags, return-from-battle info
-  - `SaveSystem` — reads/writes `user://save.json`; auto-saves on battle end + flag set
-  - `DialogBox`  — FireRed-style textbox (letter-reveal, advance on Enter/tap)
-  - `MapTiles`, `PlaceholderTileset`, `PlaceholderSprites` — tile/prop/sprite loaders for the Ninja Adventure atlases
-- Maps are built procedurally in GDScript using `MapTiles` constants + `MapTiles.stamp()` for multi-tile props (trees, houses).
+1. Add a brief to `data/sprite_briefs.json` (shapes + flat colors only)
+2. `HF_TOKEN=hf_... python3 tools/generate_sprites.py`
+3. Copy the PNG from `art/drakes/` to `public/assets/drakes/` — it appears in battle on next reload
 
 ## Music & Audio
 - Chiptune soundtrack (8-10 tracks for MVP)
@@ -211,17 +209,6 @@ Reference image: official Gen-3 Pokémon battle sprites (FireRed, Emerald era).
 - If successful: premium version or cosmetic IAP
 - No gacha, no pay-to-win
 - Potential: expansion packs as paid DLC
-
-## MVP Timeline (6-8 Weeks)
-
-| Week | Focus |
-|------|-------|
-| 1 | Godot project setup, core engine (movement, tiles, scenes, save) |
-| 2 | Battle system (turns, types, moves, catching, party) |
-| 3 | AI content pipeline (creature gen, map gen, dialog gen) |
-| 4 | Generate MVP content (30 drakes, 3 zones, 2 wardens) |
-| 5 | Team Synergy, polish, menus, music |
-| 6 | iOS build, playtesting, bug fixes, App Store submission |
 
 ## Design Principles (From Pokemon Nostalgia Research)
 1. Every tile has meaning — no decorative filler

@@ -1,0 +1,27 @@
+{
+  "_schema_version": 2,
+  "_doc": "NPC dialog for Dustway Route 1.",
+  "npcs": {
+    "rival_sable": {
+      "name": "Sable",
+      "select": [
+        { "if_flag": "sable_1_beaten", "use": "post_battle" },
+        { "use": "first_meeting" }
+      ],
+      "sections": {
+        "first_meeting": [
+          "So the Elder gave you one too.",
+          "Don't flatter yourself. Every generation gets a starter — it doesn't mean anything.",
+          "I'll beat you to the Scald. That's a promise.",
+          { "start_battle": "rival_sable_1" }
+        ],
+        "post_battle": [
+          "...",
+          "Fine. You got lucky.",
+          "I'll be waiting at the Scald. Don't take too long."
+        ]
+      }
+    },
+    "sign_west": { "text": "← KINDRA TOWN     THE SCALD GATE →" }
+  }
+}
