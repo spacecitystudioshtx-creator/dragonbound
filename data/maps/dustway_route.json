@@ -4,7 +4,7 @@
   "legend": {
     "T": { "tile": "tree" },
     ".": { "tile": "grass" },
-    ",": { "tile": "grass_pale" },
+    ",": { "tile": "meadow" },
     "t": { "tile": "tall_grass", "encounter": true },
     "p": { "tile": "path" },
     "r": { "tile": "rock" },

@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { getMap, getDialog, TRAINERS, DRAKES } from '../core/db';
-import { tileInfo } from '../core/tiles';
+import { tileInfo, frameOf } from '../core/tiles';
 import { GameState } from '../core/state';
 import { DrakeInstance } from '../core/drake';
 import { Textbox, isA } from '../ui/Textbox';
-import type { MapDef, LegendEntry, NpcDef, DialogLine } from '../core/types';
+import type { MapDef, LegendEntry, DialogLine } from '../core/types';
 import { VP_W, VP_H } from '../main';
 
 const TILE = 16;
@@ -42,6 +42,8 @@ interface Cell {
   solid: boolean;
   encounter: boolean;
   dialog: string | null;
+  enter: string | null;
+  doorImg: Phaser.GameObjects.Image | null;
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -54,6 +56,7 @@ export class WorldScene extends Phaser.Scene {
   private textbox!: Textbox;
   private moving = false;
   private uiLocked = false;
+  private suppressBump = false;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private mapNameText?: Phaser.GameObjects.Container;
 
@@ -66,11 +69,11 @@ export class WorldScene extends Phaser.Scene {
     GameState.map = data.map;
     this.moving = false;
     this.uiLocked = false;
+    this.suppressBump = false;
     this.npcSprites.clear();
 
     this.buildMap();
 
-    // Spawn position: explicit coords > named spawn > default spawn
     let sx = data.x, sy = data.y, facing = GameState.facing;
     if (sx === undefined || sy === undefined) {
       const sp = this.map.spawns[data.spawn ?? 'default'] ?? this.map.spawns.default;
@@ -83,7 +86,12 @@ export class WorldScene extends Phaser.Scene {
     this.spawnPlayer(sx!, sy!, facing);
 
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, Math.max(this.mapW * TILE, VP_W), Math.max(this.mapH * TILE, VP_H));
+    // Center maps smaller than the viewport (interiors) instead of pinning top-left.
+    const mw = this.mapW * TILE, mh = this.mapH * TILE;
+    cam.setBounds(
+      Math.min(0, -(VP_W - mw) / 2), Math.min(0, -(VP_H - mh) / 2),
+      Math.max(mw, VP_W), Math.max(mh, VP_H)
+    );
     cam.startFollow(this.playerSprite, true);
     cam.fadeIn(250, 0, 0, 0);
 
@@ -100,6 +108,11 @@ export class WorldScene extends Phaser.Scene {
 
   // ── Map construction ──────────────────────────────────────────────────────
 
+  private entryAt(x: number, y: number): LegendEntry {
+    const ch = this.map.rows[y]?.[x] ?? '.';
+    return this.map.legend[ch] ?? { tile: 'grass' };
+  }
+
   private buildMap(): void {
     this.grid = [];
     this.mapH = this.map.rows.length;
@@ -107,23 +120,56 @@ export class WorldScene extends Phaser.Scene {
 
     for (let y = 0; y < this.mapH; y++) {
       const row: Cell[] = [];
-      const chars = this.map.rows[y];
       for (let x = 0; x < this.mapW; x++) {
-        const ch = chars[x] ?? '.';
-        const entry: LegendEntry = this.map.legend[ch] ?? { tile: 'grass' };
+        const entry = this.entryAt(x, y);
         const info = tileInfo(entry.tile);
+        const px = x * TILE, py = y * TILE;
+
+        // 1) base ground under transparent tiles/props
         const baseName = entry.base ?? info.base;
         if (baseName) {
-          this.add.image(x * TILE, y * TILE, 'tiles', tileInfo(baseName).index).setOrigin(0, 0);
+          this.add.image(px, py, 'ground', frameOf(tileInfo(baseName).frame!)).setOrigin(0, 0).setDepth(0);
         }
-        this.add.image(x * TILE, y * TILE, 'tiles', info.index).setOrigin(0, 0);
+
+        // 2) the tile itself: animated sprite, static ground, or y-sorted prop
+        let doorImg: Phaser.GameObjects.Image | null = null;
+        if (info.prop) {
+          const spr = this.add.image(px + 8, py + TILE, `prop_${info.prop}`).setOrigin(0.5, 1);
+          spr.setDepth(entry.tile === 'tall_grass' ? py + TILE + 0.5 : py + TILE);
+        } else if (info.anim) {
+          const spr = this.add.sprite(px, py, 'ground', frameOf(info.frame!)).setOrigin(0, 0).setDepth(1);
+          spr.play({ key: info.anim, startFrame: (x + y) % 2 });
+        } else if (info.frame) {
+          const img = this.add.image(px, py, 'ground', frameOf(info.frame)).setOrigin(0, 0).setDepth(1);
+          if (entry.tile === 'door') doorImg = img;
+        }
+
         row.push({
           solid: entry.solid ?? info.solid ?? false,
           encounter: entry.encounter ?? false,
           dialog: entry.dialog ?? null,
+          enter: entry.enter ?? null,
+          doorImg,
         });
       }
       this.grid.push(row);
+    }
+
+    // 3) auto-edge fringes: path/water cells get grass banks where neighbors differ
+    for (let y = 0; y < this.mapH; y++) {
+      for (let x = 0; x < this.mapW; x++) {
+        const fam = tileInfo(this.entryAt(x, y).tile).edges;
+        if (!fam) continue;
+        const sides: [string, number, number][] = [['n', 0, -1], ['s', 0, 1], ['w', -1, 0], ['e', 1, 0]];
+        for (const [side, dx, dy] of sides) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= this.mapW || ny >= this.mapH) continue;
+          const nfam = tileInfo(this.entryAt(nx, ny).tile).edges;
+          if (nfam !== fam) {
+            this.add.image(x * TILE, y * TILE, 'ground', frameOf(`${fam}_${side}`)).setOrigin(0, 0).setDepth(2);
+          }
+        }
+      }
     }
   }
 
@@ -133,14 +179,14 @@ export class WorldScene extends Phaser.Scene {
       const facing = npc.facing ?? 'down';
       const spr = this.add
         .sprite(npc.x * TILE + 8, npc.y * TILE + 8, 'characters', npcFrame(npc.sprite, facing))
-        .setDepth(5);
+        .setDepth(npc.y * TILE + TILE);
       this.npcSprites.set(npc.id, spr);
       this.grid[npc.y][npc.x].solid = true;
     }
   }
 
   private spawnPlayer(x: number, y: number, facing: string): void {
-    this.playerSprite = this.add.sprite(x * TILE + 8, y * TILE + 8, 'player', 0).setDepth(10);
+    this.playerSprite = this.add.sprite(x * TILE + 8, y * TILE + 8, 'player', 0);
     for (const dir of Object.keys(DIR_ROW)) {
       const row = DIR_ROW[dir];
       if (!this.anims.exists(`walk_${dir}`)) {
@@ -163,6 +209,7 @@ export class WorldScene extends Phaser.Scene {
   // ── Movement ──────────────────────────────────────────────────────────────
 
   update(): void {
+    if (this.playerSprite) this.playerSprite.setDepth(this.playerSprite.y + 8);
     if (this.moving || this.uiLocked || this.textbox?.isOpen) return;
     const k = this.keys;
     let dir: string | null = null;
@@ -171,6 +218,7 @@ export class WorldScene extends Phaser.Scene {
     else if (k.LEFT.isDown || k.A.isDown) dir = 'left';
     else if (k.RIGHT.isDown || k.D.isDown) dir = 'right';
     if (dir) this.tryStep(dir);
+    else this.suppressBump = false; // released keys → bump-to-talk re-arms
   }
 
   private tryStep(dir: string): void {
@@ -183,6 +231,7 @@ export class WorldScene extends Phaser.Scene {
 
     if (nx < 0 || ny < 0 || nx >= this.mapW || ny >= this.mapH || this.grid[ny][nx].solid) {
       this.setPlayerIdle(dir);
+      this.onBump(nx, ny);
       return;
     }
 
@@ -196,13 +245,31 @@ export class WorldScene extends Phaser.Scene {
         GameState.x = nx;
         GameState.y = ny;
         this.moving = false;
+        this.suppressBump = false;
         this.onStep(nx, ny);
       },
     });
   }
 
+  /** Walking into something interactable starts the interaction (FireRed+). */
+  private onBump(nx: number, ny: number): void {
+    if (this.suppressBump || this.uiLocked) return;
+    if (nx < 0 || ny < 0 || nx >= this.mapW || ny >= this.mapH) return;
+    const cell = this.grid[ny][nx];
+    const npc = (this.map.npcs ?? []).find((n) => n.x === nx && n.y === ny && this.npcSprites.has(n.id));
+    this.suppressBump = true;
+    if (npc) {
+      const facePlayer = { down: 'up', up: 'down', left: 'right', right: 'left' }[GameState.facing]!;
+      this.npcSprites.get(npc.id)?.setFrame(npcFrame(npc.sprite, facePlayer));
+      this.runDialog(npc.dialog);
+    } else if (cell.enter) {
+      this.enterDoor(nx, ny, cell);
+    } else if (cell.dialog) {
+      this.runDialog(cell.dialog);
+    }
+  }
+
   private onStep(x: number, y: number): void {
-    // Exit?
     const exit = (this.map.exits ?? []).find((e) => e.x === x && e.y === y);
     if (exit) {
       this.uiLocked = true;
@@ -212,7 +279,6 @@ export class WorldScene extends Phaser.Scene {
       });
       return;
     }
-    // Wild encounter?
     const enc = this.map.encounters;
     if (enc && this.grid[y][x].encounter && GameState.party.length > 0 && Math.random() < enc.rate) {
       const total = enc.table.reduce((a, e) => a + e.weight, 0);
@@ -229,6 +295,20 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
+  /** Door-opening animation, then move inside. */
+  private enterDoor(x: number, y: number, cell: Cell): void {
+    this.uiLocked = true;
+    const img = cell.doorImg;
+    img?.setFrame(frameOf('door_half'));
+    this.time.delayedCall(110, () => img?.setFrame(frameOf('door_open')));
+    this.time.delayedCall(220, () => {
+      this.cameras.main.fadeOut(200, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.restart({ map: cell.enter!, spawn: 'default' });
+      });
+    });
+  }
+
   // ── Interaction & dialog ──────────────────────────────────────────────────
 
   private interact(): void {
@@ -239,14 +319,14 @@ export class WorldScene extends Phaser.Scene {
 
     const npc = (this.map.npcs ?? []).find((n) => n.x === tx && n.y === ty && this.npcSprites.has(n.id));
     if (npc) {
-      // NPC turns to face the player
       const facePlayer = { down: 'up', up: 'down', left: 'right', right: 'left' }[GameState.facing]!;
       this.npcSprites.get(npc.id)?.setFrame(npcFrame(npc.sprite, facePlayer));
       this.runDialog(npc.dialog);
       return;
     }
-    const cellDialog = this.grid[ty][tx].dialog;
-    if (cellDialog) this.runDialog(cellDialog);
+    const cell = this.grid[ty][tx];
+    if (cell.enter) this.enterDoor(tx, ty, cell);
+    else if (cell.dialog) this.runDialog(cell.dialog);
   }
 
   private async runDialog(ref: string): Promise<void> {
@@ -288,26 +368,97 @@ export class WorldScene extends Phaser.Scene {
     GameState.save();
   }
 
+  // ── Starter selection (FireRed-style framed panel) ────────────────────────
+
   private async pickStarter(): Promise<void> {
     if (GameState.party.length > 0) return;
     const options = ['ember', 'ripple', 'sprig'];
-    const names = options.map((id) => `${DRAKES[id].name} (${DRAKES[id].type})`);
 
-    // Show the three starters above the textbox while choosing
-    const sprites = options.map((id, i) =>
-      this.add.image(48 + i * 72, 56, `drake_${id}`).setScale(0.6).setScrollFactor(0).setDepth(999)
-    );
     await this.textbox.show('Choose your partner, young one.');
-    const idx = await this.textbox.choices(names, false);
-    sprites.forEach((s) => s.destroy());
 
-    const chosen = options[idx];
-    GameState.party.push(new DrakeInstance(chosen, 5));
-    GameState.runestones += 5;
-    GameState.setFlag('starter_given');
-    await this.textbox.show(`You received ${DRAKES[chosen].name}!`);
-    await this.textbox.show('You also received 5 RUNESTONES. Throw one in battle to bind a wild drake!');
-    GameState.save();
+    while (true) {
+      const idx = await this.starterPanel(options);
+      const chosen = options[idx];
+      await this.textbox.show(`So — ${DRAKES[chosen].name.toUpperCase()}, the ${DRAKES[chosen].type} drake?`);
+      const yes = await this.textbox.choices(['YES', 'NO'], false);
+      if (yes === 0) {
+        GameState.party.push(new DrakeInstance(chosen, 5));
+        GameState.runestones += 5;
+        GameState.setFlag('starter_given');
+        await this.textbox.show(`You received ${DRAKES[chosen].name.toUpperCase()}!`);
+        await this.textbox.show('You also received 5 RUNESTONES. Throw one in battle to bind a wild drake!');
+        GameState.save();
+        return;
+      }
+    }
+  }
+
+  private starterPanel(options: string[]): Promise<number> {
+    return new Promise((resolve) => {
+      const objs: Phaser.GameObjects.GameObject[] = [];
+      const dim = this.add.rectangle(0, 0, VP_W, VP_H, 0x101018, 0.45).setOrigin(0).setScrollFactor(0).setDepth(994);
+      objs.push(dim);
+
+      // Textbox-style frame
+      const g = this.add.graphics().setScrollFactor(0).setDepth(995);
+      g.fillStyle(0x303030, 1).fillRoundedRect(14, 8, 212, 96, 5);
+      g.fillStyle(0xd8a038, 1).fillRoundedRect(16, 10, 208, 92, 4);
+      g.fillStyle(0xf8f8f8, 1).fillRoundedRect(19, 13, 202, 86, 3);
+      objs.push(g);
+
+      const slots: { spr: Phaser.GameObjects.Image; name: Phaser.GameObjects.Text; box: Phaser.GameObjects.Graphics }[] = [];
+      options.forEach((id, i) => {
+        const cx = 53 + i * 67;
+        const box = this.add.graphics().setScrollFactor(0).setDepth(996);
+        objs.push(box);
+        const spr = this.add.image(cx, 48, `drake_${id}`).setScale(0.52).setScrollFactor(0).setDepth(997);
+        objs.push(spr);
+        const name = this.add.text(cx, 80, DRAKES[id].name.toUpperCase(), {
+          fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#383030', resolution: 3,
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(997);
+        objs.push(name);
+        const type = this.add.text(cx, 90, DRAKES[id].type.toUpperCase(), {
+          fontFamily: '"Press Start 2P"', fontSize: '6px', color: '#a06848', resolution: 3,
+        }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(997);
+        objs.push(type);
+        slots.push({ spr, name, box });
+      });
+
+      const cursor = this.add.text(0, 14, '▼', {
+        fontFamily: '"Press Start 2P"', fontSize: '8px', color: '#e04038', resolution: 3,
+      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(998);
+      objs.push(cursor);
+
+      let sel = 0;
+      let bounce: Phaser.Tweens.Tween | null = null;
+      const paint = () => {
+        slots.forEach((s, i) => {
+          const cx = 53 + i * 67;
+          s.box.clear();
+          s.box.fillStyle(i === sel ? 0xfff0c8 : 0xefe8dc, 1).fillRoundedRect(cx - 27, 20, 54, 54, 4);
+          s.box.lineStyle(1, i === sel ? 0xd8a038 : 0xc8c0b0, 1).strokeRoundedRect(cx - 27, 20, 54, 54, 4);
+          s.spr.setScale(i === sel ? 0.58 : 0.48).setAlpha(i === sel ? 1 : 0.82);
+          s.name.setColor(i === sel ? '#c03028' : '#383030');
+        });
+        cursor.setX(53 + sel * 67);
+        bounce?.remove();
+        bounce = this.tweens.add({ targets: slots[sel].spr, y: 45, duration: 260, yoyo: true, repeat: -1 });
+        slots.forEach((s, i) => { if (i !== sel) s.spr.setY(48); });
+      };
+      paint();
+
+      const keyHandler = (e: KeyboardEvent) => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') { sel = (sel + 2) % 3; paint(); }
+        else if (e.key === 'ArrowRight' || e.key === 'd') { sel = (sel + 1) % 3; paint(); }
+        else if (isA(e)) {
+          this.input.keyboard!.off('keydown', keyHandler);
+          bounce?.remove();
+          objs.forEach((o) => o.destroy());
+          resolve(sel);
+        }
+      };
+      this.input.keyboard!.on('keydown', keyHandler);
+    });
   }
 
   // ── Battles ───────────────────────────────────────────────────────────────
@@ -329,6 +480,7 @@ export class WorldScene extends Phaser.Scene {
 
   private async onBattleReturn(data: any): Promise<void> {
     this.uiLocked = false;
+    this.suppressBump = true;
     this.setPlayerIdle(GameState.facing);
     this.cameras.main.fadeIn(250, 0, 0, 0);
     GameState.save();

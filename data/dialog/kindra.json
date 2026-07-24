@@ -43,6 +43,41 @@
         "Come back once you've made some coin on the Dustway."
       ]
     },
+    "ma": {
+      "name": "Ma",
+      "lines": [
+        "There you are! Elder Moss was asking for you up at the Pyre Hall.",
+        "Look at you, all grown and itching for the Dustway...",
+        "Rest a moment first. Every warden started with a good night's sleep.",
+        { "heal_party": true },
+        "Go on then. And come home if the road gets mean."
+      ]
+    },
+    "acolyte": {
+      "name": "Acolyte",
+      "select": [
+        { "unless_flag": "starter_given", "use": "before" },
+        { "use": "after" }
+      ],
+      "sections": {
+        "before": [
+          "The Elder keeps the Pyre burning inside the great hall.",
+          "He's been waiting for you. Go on in — the door's open."
+        ],
+        "after": [
+          "The Pyre's flame never goes out. Neither should yours.",
+          "The Elder can rekindle your drakes if they're worn down."
+        ]
+      }
+    },
+    "kid": {
+      "name": "Kid",
+      "lines": [
+        "When I get MY drake, I'm gonna pick teams with synergy!",
+        "Gramps says two fire drakes on the bench can combo an ERUPTION. Cool, right?"
+      ]
+    },
+    "fen_pet": { "text": "Kree! Fen's old partner Flick sizes you up with one sharp eye... then goes back to preening." },
     "door_locked": { "text": "The door is locked." },
     "pyre_door": { "text": "The Pyre hall. Warm air breathes out through the door crack. It's barred from inside." },
     "sign_east": { "text": "DUSTWAY ROUTE 1 →   Tall grass ahead. Wild drakes likely." },

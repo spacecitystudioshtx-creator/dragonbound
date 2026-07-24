@@ -51,8 +51,10 @@ export interface LegendEntry {
   base?: string;
   solid?: boolean;
   encounter?: boolean;
-  /** Interactable tile (sign, locked door): dialog ref shown on A press. */
+  /** Interactable tile (sign, locked door): dialog ref shown on approach. */
   dialog?: string;
+  /** Door tile: map id to enter (target map's 'default' spawn). */
+  enter?: string;
 }
 
 export interface MapDef {

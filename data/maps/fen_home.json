@@ -1,0 +1,31 @@
+{
+  "id": "fen_home",
+  "name": "FEN'S HOUSE",
+  "legend": {
+    "t": { "tile": "iwall_top" },
+    "i": { "tile": "iwall" },
+    "F": { "tile": "floor_wood" },
+    "M": { "tile": "mat" },
+    "B": { "tile": "bed" },
+    "A": { "tile": "table" },
+    "L": { "tile": "plant" }
+  },
+  "rows": [
+    "ttttttttt",
+    "iiiiiiiii",
+    "FBFFFFFLF",
+    "FFFAFFFFF",
+    "FFFFFFFFF",
+    "FFFFMFFFF",
+    "ttttttttt"
+  ],
+  "npcs": [
+    { "id": "fen_pet", "x": 5, "y": 3, "sprite": "bird", "facing": "down", "dialog": "kindra.fen_pet" }
+  ],
+  "exits": [
+    { "x": 4, "y": 5, "to": "kindra_town", "spawn": "from_fen" }
+  ],
+  "spawns": {
+    "default": { "x": 4, "y": 4, "facing": "up" }
+  }
+}

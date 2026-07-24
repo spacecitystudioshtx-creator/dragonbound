@@ -2,14 +2,14 @@
   "id": "scald_gate",
   "name": "THE SCALD — GATE",
   "legend": {
-    "S": { "tile": "stone_wall" },
+    "S": { "tile": "cave_wall" },
     "B": { "tile": "brick" },
-    ".": { "tile": "grass_pale" },
-    ",": { "tile": "grass" },
+    ".": { "tile": "meadow" },
+    ",": { "tile": "grass2" },
     "p": { "tile": "path" },
     "r": { "tile": "rock" },
     "G": { "tile": "door", "dialog": "scald_gate.gate" },
-    "x": { "tile": "torch" }
+    "x": { "tile": "brazier" }
   },
   "rows": [
     "SSSSSSSSSSSSSSSSSS",

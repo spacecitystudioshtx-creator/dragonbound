@@ -27,6 +27,9 @@ export class BattleScene extends Phaser.Scene {
   private enemyImg!: Phaser.GameObjects.Image;
   private hud!: Phaser.GameObjects.Graphics;
   private hudTexts: Phaser.GameObjects.Text[] = [];
+  // Displayed HP values lag real HP and tween toward it (FireRed bar drain).
+  private dispPlayerHp = 0;
+  private dispEnemyHp = 0;
 
   constructor() {
     super('Battle');
@@ -70,11 +73,71 @@ export class BattleScene extends Phaser.Scene {
     g.fillStyle(0xb08850, 1).fillEllipse(178, 74, 100, 26);
     g.fillStyle(0xb08850, 1).fillEllipse(62, 116, 104, 28);
 
-    this.enemyImg = this.add.image(178, 46, `drake_${this.enemy.speciesId}`).setScale(0.72);
-    this.playerImg = this.add.image(62, 88, `drake_${this.player.speciesId}`).setScale(0.8).setFlipX(true);
+    // Combatants slide onto their platforms during the intro (FireRed entry).
+    this.enemyImg = this.add.image(VP_W + 60, 46, `drake_${this.enemy.speciesId}`).setScale(0.72);
+    this.playerImg = this.add.image(-60, 88, `drake_${this.player.speciesId}`).setScale(0.8).setFlipX(true);
 
+    this.dispPlayerHp = this.player.hp;
+    this.dispEnemyHp = this.enemy.hp;
     this.hud = this.add.graphics().setDepth(50);
     this.redrawHud();
+  }
+
+  private slideIn(): Promise<void> {
+    return new Promise((resolve) => {
+      this.tweens.add({ targets: this.enemyImg, x: 178, duration: 450, ease: 'Cubic.easeOut' });
+      this.tweens.add({
+        targets: this.playerImg, x: 62, duration: 450, ease: 'Cubic.easeOut',
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
+  /** Animate HP bars draining/refilling toward real values. */
+  private tweenHud(): Promise<void> {
+    return new Promise((resolve) => {
+      const proxy = { p: this.dispPlayerHp, e: this.dispEnemyHp };
+      this.tweens.add({
+        targets: proxy,
+        p: this.player.hp,
+        e: this.enemy.hp,
+        duration: 420,
+        ease: 'Linear',
+        onUpdate: () => {
+          this.dispPlayerHp = Math.round(proxy.p);
+          this.dispEnemyHp = Math.round(proxy.e);
+          this.redrawHud();
+        },
+        onComplete: () => {
+          this.dispPlayerHp = this.player.hp;
+          this.dispEnemyHp = this.enemy.hp;
+          this.redrawHud();
+          resolve();
+        },
+      });
+    });
+  }
+
+  private lunge(img: Phaser.GameObjects.Image, dx: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.tweens.add({
+        targets: img, x: img.x + dx, duration: 90, yoyo: true, ease: 'Quad.easeOut',
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
+  private faintDrop(img: Phaser.GameObjects.Image): Promise<void> {
+    return new Promise((resolve) => {
+      this.tweens.add({
+        targets: img, y: img.y + 26, alpha: 0, duration: 340, ease: 'Quad.easeIn',
+        onComplete: () => resolve(),
+      });
+    });
+  }
+
+  private reviveSprite(img: Phaser.GameObjects.Image, x: number, y: number): void {
+    img.setPosition(x, y).setAlpha(1);
   }
 
   private redrawHud(): void {
@@ -98,13 +161,13 @@ export class BattleScene extends Phaser.Scene {
     // Enemy box (top-left)
     box(8, 8, 96, 26);
     label(12, 12, `${this.enemy.name.toUpperCase()} L${this.enemy.level}`);
-    hpBar(12, 26, 84, this.enemy.hp / this.enemy.maxHp);
+    hpBar(12, 26, 84, this.dispEnemyHp / this.enemy.maxHp);
 
     // Player box (right, above panel)
     box(136, 74, 98, 38);
     label(140, 78, `${this.player.name.toUpperCase()} L${this.player.level}`);
-    hpBar(140, 90, 86, this.player.hp / this.player.maxHp);
-    label(140, 97, `${this.player.hp}/${this.player.maxHp}`);
+    hpBar(140, 90, 86, this.dispPlayerHp / this.player.maxHp);
+    label(140, 97, `${this.dispPlayerHp}/${this.player.maxHp}`);
     // XP bar
     this.hud.fillStyle(0x585858, 1).fillRect(140, 107, 86, 2);
     this.hud.fillStyle(0x4890f0, 1).fillRect(140, 107, Math.floor(86 * Math.min(1, this.player.xp / this.player.xpToNext())), 2);
@@ -119,6 +182,7 @@ export class BattleScene extends Phaser.Scene {
   // ── Battle loop ───────────────────────────────────────────────────────────
 
   private async runBattle(): Promise<void> {
+    await this.slideIn();
     if (this.payload.kind === 'wild') {
       await this.textbox.show(`A wild ${this.enemy.name.toUpperCase()} appeared!`);
     } else {
@@ -177,9 +241,11 @@ export class BattleScene extends Phaser.Scene {
       if (who === 'player') {
         if (this.player.fainted) continue;
         const res = executeMove(this.player, this.enemy, moveId);
+        await this.textbox.show(res.messages[0]);
+        await this.lunge(this.playerImg, 14);
         await this.flashSprite(this.enemyImg);
-        this.redrawHud();
-        for (const m of res.messages) await this.textbox.show(m);
+        await this.tweenHud();
+        for (const m of res.messages.slice(1)) await this.textbox.show(m);
         if (this.enemy.fainted && (await this.onEnemyFaint())) return true;
         if (this.player.fainted && (await this.onPlayerFaint())) return true;
       } else {
@@ -197,15 +263,18 @@ export class BattleScene extends Phaser.Scene {
 
   private async enemyStrike(): Promise<boolean> {
     const res = executeMove(this.enemy, this.player, pickAiMove(this.enemy, this.player));
+    await this.textbox.show(res.messages[0]);
+    await this.lunge(this.enemyImg, -14);
     await this.flashSprite(this.playerImg);
-    this.redrawHud();
-    for (const m of res.messages) await this.textbox.show(m);
+    await this.tweenHud();
+    for (const m of res.messages.slice(1)) await this.textbox.show(m);
     if (this.player.fainted && (await this.onPlayerFaint())) return true;
     if (this.enemy.fainted && (await this.onEnemyFaint())) return true;
     return false;
   }
 
   private async onEnemyFaint(): Promise<boolean> {
+    await this.faintDrop(this.enemyImg);
     await this.textbox.show(`${this.enemy.name.toUpperCase()} fainted!`);
     const xp = xpReward(this.enemy, this.payload.kind === 'trainer');
     await this.textbox.show(`${this.player.name} gained ${xp} XP!`);
@@ -225,6 +294,8 @@ export class BattleScene extends Phaser.Scene {
       this.enemy = next;
       this.enemy.resetBattleState();
       this.enemyImg.setTexture(`drake_${this.enemy.speciesId}`);
+      this.reviveSprite(this.enemyImg, 178, 46);
+      this.dispEnemyHp = this.enemy.hp;
       this.redrawHud();
       await this.textbox.show(`${TRAINERS[this.payload.trainerId!].name.toUpperCase()} sent out ${this.enemy.name.toUpperCase()}!`);
       return false;
@@ -239,12 +310,15 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async onPlayerFaint(): Promise<boolean> {
+    await this.faintDrop(this.playerImg);
     await this.textbox.show(`${this.player.name.toUpperCase()} fainted!`);
     const next = GameState.party.find((d) => !d.fainted);
     if (next) {
       this.player = next;
       this.player.resetBattleState();
       this.playerImg.setTexture(`drake_${this.player.speciesId}`);
+      this.reviveSprite(this.playerImg, 62, 88);
+      this.dispPlayerHp = this.player.hp;
       this.redrawHud();
       await this.textbox.show(`Go, ${this.player.name.toUpperCase()}!`);
       return false;
@@ -297,6 +371,8 @@ export class BattleScene extends Phaser.Scene {
     this.player = pick;
     this.player.resetBattleState();
     this.playerImg.setTexture(`drake_${this.player.speciesId}`);
+    this.reviveSprite(this.playerImg, 62, 88);
+    this.dispPlayerHp = this.player.hp;
     this.redrawHud();
     await this.textbox.show(`Go, ${this.player.name.toUpperCase()}!`);
     return true;

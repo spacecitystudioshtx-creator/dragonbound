@@ -1,0 +1,90 @@
+{
+  "frameSize": 16,
+  "columns": 8,
+  "tiles": {
+    "grass": 0,
+    "grass2": 1,
+    "meadow": 2,
+    "flowers_0": 3,
+    "flowers_1": 4,
+    "path": 5,
+    "water_0": 6,
+    "water_1": 7,
+    "path_n": 8,
+    "path_s": 9,
+    "path_e": 10,
+    "path_w": 11,
+    "water_n": 12,
+    "water_s": 13,
+    "water_e": 14,
+    "water_w": 15,
+    "roof_red_top": 16,
+    "roof_red_mid": 17,
+    "roof_red_eave": 18,
+    "roof_slate_top": 19,
+    "roof_slate_mid": 20,
+    "roof_slate_eave": 21,
+    "wall": 22,
+    "wall_stone": 23,
+    "window": 24,
+    "door": 25,
+    "door_half": 26,
+    "door_open": 27,
+    "cave_wall": 28,
+    "brick": 29,
+    "fence": 30,
+    "floor_wood": 31,
+    "floor_stone": 32,
+    "rug": 33,
+    "rug_n": 34,
+    "rug_s": 35,
+    "mat": 36,
+    "iwall": 37,
+    "iwall_top": 38,
+    "counter": 39,
+    "shelf": 40,
+    "table": 41
+  },
+  "props": {
+    "tree": {
+      "w": 16,
+      "h": 32
+    },
+    "pine": {
+      "w": 16,
+      "h": 24
+    },
+    "bush": {
+      "w": 16,
+      "h": 16
+    },
+    "tallgrass": {
+      "w": 16,
+      "h": 16
+    },
+    "sign": {
+      "w": 16,
+      "h": 16
+    },
+    "rock": {
+      "w": 16,
+      "h": 16
+    },
+    "well": {
+      "w": 16,
+      "h": 24
+    },
+    "brazier": {
+      "w": 16,
+      "h": 24
+    },
+    "bed": {
+      "w": 16,
+      "h": 24
+    },
+    "plant": {
+      "w": 16,
+      "h": 24
+    }
+  }
+}

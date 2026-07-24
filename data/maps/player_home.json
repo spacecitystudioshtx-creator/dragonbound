@@ -1,0 +1,32 @@
+{
+  "id": "player_home",
+  "name": "YOUR HOME",
+  "legend": {
+    "t": { "tile": "iwall_top" },
+    "i": { "tile": "iwall" },
+    "F": { "tile": "floor_wood" },
+    "M": { "tile": "mat" },
+    "B": { "tile": "bed" },
+    "A": { "tile": "table" },
+    "L": { "tile": "plant" }
+  },
+  "rows": [
+    "tttttttttt",
+    "iiiiiiiiii",
+    "FFFFFFFFFF",
+    "FBFFAFFFLF",
+    "FFFFFFFFFF",
+    "FFFFFFFFFF",
+    "FFFFFMFFFF",
+    "tttttttttt"
+  ],
+  "npcs": [
+    { "id": "ma", "x": 2, "y": 4, "sprite": "villager_b", "facing": "down", "dialog": "kindra.ma" }
+  ],
+  "exits": [
+    { "x": 5, "y": 6, "to": "kindra_town", "spawn": "from_home" }
+  ],
+  "spawns": {
+    "default": { "x": 5, "y": 5, "facing": "up" }
+  }
+}
