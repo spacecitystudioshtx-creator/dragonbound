@@ -32,17 +32,18 @@ export class DrakeInstance {
     return this.nickname ?? this.species.name;
   }
 
+  // 10%/level growth — levels must feel like real power (FireRed pacing).
   get maxHp(): number {
-    return Math.floor(this.species.base_stats.hp * (1 + this.level * 0.08)) + 8;
+    return Math.floor(this.species.base_stats.hp * (1 + this.level * 0.1)) + 8;
   }
   get atk(): number {
-    return Math.floor(this.species.base_stats.atk * (1 + this.level * 0.06));
+    return Math.floor(this.species.base_stats.atk * (1 + this.level * 0.1));
   }
   get def(): number {
-    return Math.floor(this.species.base_stats.def * (1 + this.level * 0.06));
+    return Math.floor(this.species.base_stats.def * (1 + this.level * 0.1));
   }
   get spd(): number {
-    return Math.floor(this.species.base_stats.spd * (1 + this.level * 0.06));
+    return Math.floor(this.species.base_stats.spd * (1 + this.level * 0.1));
   }
 
   get fainted(): boolean {
@@ -50,7 +51,7 @@ export class DrakeInstance {
   }
 
   xpToNext(): number {
-    return 8 * this.level * this.level;
+    return 5 * this.level * this.level;
   }
 
   /** Add xp; returns list of messages (level ups). Evolution handled by caller. */

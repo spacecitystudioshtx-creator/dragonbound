@@ -411,6 +411,140 @@ def t_table() -> Image.Image:
     return im
 
 
+def t_lava(frame: int) -> Image.Image:
+    im = new_tile(bg=(200, 70, 30, 255))
+    d = ImageDraw.Draw(im)
+    spots = [(2, 3), (9, 6), (5, 12), (12, 11)] if frame == 0 else [(4, 5), (11, 3), (7, 10), (13, 13)]
+    for x, y in spots:
+        d.ellipse([x - 1, y - 1, x + 2, y + 1], fill=(248, 160, 56, 255))
+        d.point((x, y), (252, 220, 112, 255))
+    speckle(d, T, T, (160, 48, 24, 255), 8, 100 + frame)
+    return im
+
+
+def t_basalt() -> Image.Image:
+    im = new_tile(bg=(88, 74, 70, 255))
+    d = ImageDraw.Draw(im)
+    d.line([(0, 7), (T - 1, 7)], (70, 58, 55, 255))
+    d.line([(7, 0), (7, 7)], (70, 58, 55, 255))
+    d.line([(3, 8), (3, 15)], (70, 58, 55, 255))
+    d.line([(11, 8), (11, 15)], (70, 58, 55, 255))
+    speckle(d, T, T, (104, 88, 82, 255), 8, 110)
+    return im
+
+
+def t_lava_edge(side: str) -> Image.Image:
+    """Dark basalt lip where lava meets floor."""
+    im = new_tile()
+    d = ImageDraw.Draw(im)
+    dk = (56, 44, 42, 255)
+    if side == "n":
+        d.rectangle([0, 0, T - 1, 1], fill=dk)
+        for x in range(0, T, 3):
+            d.point((x, 2), (248, 160, 56, 255))
+    elif side == "s":
+        d.rectangle([0, T - 2, T - 1, T - 1], fill=dk)
+    elif side == "w":
+        d.rectangle([0, 0, 1, T - 1], fill=dk)
+    else:
+        d.rectangle([T - 2, 0, T - 1, T - 1], fill=dk)
+    return im
+
+
+def t_banner() -> Image.Image:
+    """Wall banner with ember sigil, drawn over wall_stone."""
+    im = t_wall_stone()
+    d = ImageDraw.Draw(im)
+    d.rectangle([4, 0, 11, 12], fill=(160, 48, 40, 255))
+    d.polygon([(4, 12), (11, 12), (10, 14), (7, 12), (5, 14)], fill=(160, 48, 40, 255))
+    d.rectangle([4, 0, 11, 1], fill=(120, 34, 30, 255))
+    d.polygon([(7, 4), (5, 9), (8, 8), (10, 9)], fill=(240, 180, 70, 255))
+    px = d.point
+    px((7, 5), (252, 220, 112, 255))
+    return im
+
+
+def t_painting() -> Image.Image:
+    im = t_iwall()
+    d = ImageDraw.Draw(im)
+    d.rectangle([3, 2, 12, 10], fill=(120, 84, 48, 255))
+    d.rectangle([4, 3, 11, 9], fill=(150, 196, 220, 255))
+    d.polygon([(4, 9), (7, 5), (9, 8), (11, 6), (11, 9)], fill=(88, 132, 84, 255))
+    d.ellipse([8, 4, 10, 6], fill=(248, 232, 150, 255))
+    return im
+
+
+def t_window_int() -> Image.Image:
+    im = t_iwall()
+    d = ImageDraw.Draw(im)
+    d.rectangle([3, 2, 12, 11], fill=OUT)
+    d.rectangle([4, 3, 11, 10], fill=(150, 200, 240, 255))
+    d.line([(4, 4), (6, 4)], (222, 240, 252, 255))
+    d.line([(8, 3), (8, 10)], OUT)
+    d.line([(4, 7), (11, 7)], OUT)
+    return im
+
+
+def t_stove() -> Image.Image:
+    im = new_tile(bg=(96, 96, 104, 255))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, T - 1, T - 1], outline=OUT)
+    d.rectangle([2, 2, 13, 7], fill=(60, 60, 70, 255))
+    d.ellipse([3, 3, 7, 6], fill=(40, 40, 46, 255))
+    d.ellipse([9, 3, 12, 6], fill=(40, 40, 46, 255))
+    d.rectangle([2, 10, 13, 14], fill=(126, 126, 136, 255))
+    d.rectangle([6, 11, 9, 13], fill=(248, 160, 56, 255))
+    return im
+
+
+def t_sink() -> Image.Image:
+    im = new_tile(bg=(200, 204, 208, 255))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, T - 1, T - 1], outline=OUT)
+    d.rectangle([3, 4, 12, 12], fill=(160, 168, 176, 255))
+    d.ellipse([5, 6, 10, 11], fill=(120, 150, 176, 255))
+    d.rectangle([7, 1, 8, 4], fill=(90, 96, 104, 255))
+    return im
+
+
+def t_stool() -> Image.Image:
+    im = t_floor_wood()
+    d = ImageDraw.Draw(im)
+    d.ellipse([4, 4, 11, 10], fill=DOOR_HI, outline=OUT)
+    d.point([(5, 11), (10, 11)], OUT)
+    return im
+
+
+def t_chimney() -> Image.Image:
+    im = t_roof_top(ROOF, ROOF_HI, ROOF_SH)
+    d = ImageDraw.Draw(im)
+    d.rectangle([5, 1, 10, 9], fill=(150, 132, 120, 255), outline=OUT)
+    d.line([(6, 3), (9, 3)], (124, 108, 98, 255))
+    d.line([(6, 6), (9, 6)], (124, 108, 98, 255))
+    for i, (sx, sy) in enumerate(((7, -1), (9, -3))):
+        d.point((sx, max(0, sy + 2)), (220, 220, 224, 220))
+    return im
+
+
+def t_window_box() -> Image.Image:
+    im = t_window()
+    d = ImageDraw.Draw(im)
+    d.rectangle([2, 11, 13, 13], fill=(120, 84, 48, 255), outline=OUT)
+    for x, c in ((4, (244, 148, 168, 255)), (7, (248, 216, 96, 255)), (10, (244, 148, 168, 255))):
+        d.point((x, 10), c)
+        d.point((x + 1, 10), (92, 168, 84, 255))
+    return im
+
+
+def t_doorstep() -> Image.Image:
+    im = t_grass(0)
+    d = ImageDraw.Draw(im)
+    d.rectangle([2, 2, 13, 13], fill=STONE_SH)
+    d.rectangle([3, 3, 12, 12], fill=STONE)
+    d.line([(3, 12), (12, 12)], STONE_DK)
+    return im
+
+
 # ── Props (separate images, y-sorted in engine) ───────────────────────────────
 def p_tree() -> Image.Image:
     im = new_tile(16, 32)
@@ -518,6 +652,67 @@ def p_bed() -> Image.Image:
     return im
 
 
+def p_bookshelf() -> Image.Image:
+    im = new_tile(16, 24)
+    d = ImageDraw.Draw(im)
+    d.rectangle([1, 0, 14, 23], fill=DOOR_SH, outline=OUT)
+    for y in (3, 10, 17):
+        d.rectangle([3, y, 12, y + 4], fill=(64, 44, 30, 255))
+        for i, x in enumerate(range(3, 12, 2)):
+            c = [(200, 96, 80, 255), (110, 160, 205, 255), (222, 200, 110, 255), (130, 180, 110, 255)][i % 4]
+            d.rectangle([x, y, x + 1, y + 4], fill=c)
+    d.rectangle([1, 22, 14, 23], fill=OUT)
+    return im
+
+
+def p_statue() -> Image.Image:
+    """Stone drake statue for halls and the Scald."""
+    im = new_tile(16, 24)
+    d = ImageDraw.Draw(im)
+    d.rectangle([3, 19, 12, 23], fill=STONE_SH, outline=OUT)
+    d.ellipse([4, 8, 11, 19], fill=STONE, outline=OUT)
+    d.ellipse([6, 3, 13, 10], fill=STONE, outline=OUT)
+    d.point((11, 6), OUT)
+    d.polygon([(7, 3), (8, 0), (9, 3)], fill=STONE_SH, outline=OUT)
+    d.polygon([(4, 12), (0, 8), (4, 16)], fill=STONE_SH, outline=OUT)
+    d.line([(5, 17), (10, 17)], STONE_DK)
+    return im
+
+
+def p_cinder_grass() -> Image.Image:
+    """Ember-lit tall grass for the Scald (encounter tile)."""
+    im = new_tile()
+    d = ImageDraw.Draw(im)
+    for x in range(0, T, 4):
+        d.line([(x + 1, 15), (x + 1, 7)], (120, 70, 44, 255))
+        d.line([(x + 2, 15), (x + 2, 9)], (168, 96, 48, 255))
+        d.line([(x + 3, 15), (x + 3, 6)], (120, 70, 44, 255))
+        d.point((x + 3, 6), (248, 160, 56, 255))
+        d.point((x + 1, 8), (248, 160, 56, 255))
+    d.rectangle([0, 14, 15, 15], fill=(104, 62, 40, 255))
+    return im
+
+
+def p_barrel() -> Image.Image:
+    im = new_tile()
+    d = ImageDraw.Draw(im)
+    d.ellipse([3, 2, 12, 15], fill=DOOR, outline=OUT)
+    d.line([(4, 5), (11, 5)], (90, 60, 36, 255))
+    d.line([(4, 11), (11, 11)], (90, 60, 36, 255))
+    d.ellipse([5, 3, 10, 6], fill=DOOR_HI)
+    return im
+
+
+def p_crate() -> Image.Image:
+    im = new_tile()
+    d = ImageDraw.Draw(im)
+    d.rectangle([2, 4, 13, 15], fill=DOOR_HI, outline=OUT)
+    d.line([(2, 4), (13, 15)], DOOR_SH)
+    d.line([(13, 4), (2, 15)], DOOR_SH)
+    d.rectangle([2, 4, 13, 5], fill=(200, 160, 110, 255))
+    return im
+
+
 def p_plant() -> Image.Image:
     im = new_tile(16, 24)
     d = ImageDraw.Draw(im)
@@ -572,6 +767,22 @@ def main() -> None:
         ("counter", t_counter()),
         ("shelf", t_shelf()),
         ("table", t_table()),
+        ("lava_0", t_lava(0)),
+        ("lava_1", t_lava(1)),
+        ("lava_n", t_lava_edge("n")),
+        ("lava_s", t_lava_edge("s")),
+        ("lava_e", t_lava_edge("e")),
+        ("lava_w", t_lava_edge("w")),
+        ("basalt", t_basalt()),
+        ("banner", t_banner()),
+        ("painting", t_painting()),
+        ("window_int", t_window_int()),
+        ("stove", t_stove()),
+        ("sink", t_sink()),
+        ("stool", t_stool()),
+        ("chimney", t_chimney()),
+        ("window_box", t_window_box()),
+        ("doorstep", t_doorstep()),
     ]
 
     cols = 8
@@ -598,6 +809,11 @@ def main() -> None:
         "brazier": p_brazier(),
         "bed": p_bed(),
         "plant": p_plant(),
+        "bookshelf": p_bookshelf(),
+        "statue": p_statue(),
+        "cindergrass": p_cinder_grass(),
+        "barrel": p_barrel(),
+        "crate": p_crate(),
     }
     manifest["props"] = {}
     for name, im in props.items():

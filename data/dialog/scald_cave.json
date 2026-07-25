@@ -1,0 +1,45 @@
+{
+  "_schema_version": 2,
+  "_doc": "Dialog for the Scald trial cave.",
+  "npcs": {
+    "ashen": {
+      "name": "Ashen Acolyte",
+      "select": [
+        { "if_flag": "acolyte_1_beaten", "use": "post" },
+        { "use": "challenge" }
+      ],
+      "sections": {
+        "challenge": [
+          "Only embers pass this floor.",
+          "Show me yours!",
+          { "start_battle": "scald_acolyte" }
+        ],
+        "post": [
+          "The Warden watches from the high stone.",
+          "Mind the lava. It does not forgive."
+        ]
+      }
+    },
+    "brask": {
+      "name": "Warden Brask",
+      "select": [
+        { "if_flag": "brask_beaten", "use": "post" },
+        { "use": "trial" }
+      ],
+      "sections": {
+        "trial": [
+          "So. The hatchling who cracked Sable's shell.",
+          "This hall is a verdict, and I am its voice.",
+          "Show me a flame that doesn't flinch!",
+          { "start_battle": "warden_brask" }
+        ],
+        "post": [
+          "The EMBER SIGIL doesn't make you strong. It says you already were.",
+          "Seven wardens remain, hatchling. The road runs north — soon.",
+          "Rest your drakes by my fire before you go.",
+          { "heal_party": true }
+        ]
+      }
+    }
+  }
+}

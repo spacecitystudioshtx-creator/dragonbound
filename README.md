@@ -2,29 +2,32 @@
 
 A Pokémon FireRed-style 2D pixel art creature collector RPG that runs in any web browser. Collect, battle, and evolve dragon-themed creatures called **Drakes**. Built with an AI-first content pipeline so the world builds itself from creative direction.
 
-## Status (as of 2026-07-24)
+## Status (as of 2026-07-25)
 
-**Engine pivot complete: Godot → TypeScript + Phaser 4 + Vite.** The game now runs in the browser. The old Godot project is archived in `godot-legacy/` (delete once we're confident nothing else needs porting).
+**Engine pivot complete: Godot → TypeScript + Phaser 4 + Vite.** The game runs in the browser. The old Godot project is archived in `godot-legacy/` (delete once we're confident nothing else needs porting). **All art is now original and generated** — tileset, props, and every character sprite come from `tools/generate_tileset.py` + `tools/generate_characters.py`; nothing from asset packs remains except the drake battle sprites (ours, AI-generated earlier).
 
-**Playable end-to-end today:** title screen → new game/continue → Kindra town → starter choice from Elder Moss (Ember/Ripple/Sprig, sprites on screen) → Dustway Route 1 wild encounters → full FireRed-style battle (fight/runestone-catch/swap/run, type chart, XP, level-ups, evolution) → rival Sable trainer battle (picks your counter) → Scald gate + Warden Brask (flag-aware dialog) → auto-save to localStorage, whiteout on party wipe.
-
-**Verified by automated in-browser playtest**: the whole loop above was driven end-to-end by the built-in test harness (see Dev Workflow).
+**The first full arc is playable and was verified end-to-end by the automated in-browser playtest:** title → starter choice in the Pyre Hall (framed FireRed-style panel) → Ma heals at home, four enterable furnished interiors in a 30×20 Kindra → Dustway Route 1 wild battles → rival Sable (counter-picks your starter; *losable* — the story continues either way, and he takes rematches) → the Scald gate opens once you've faced him → the Scald: lava cave with animated lava, ember grass encounters (rare Ember spawn), Ashen Acolyte trainer → **Warden Brask boss fight** (Flick L8 + Ember L10, volcanic battle backdrop) → **EMBER SIGIL** (first of eight), post-victory heal, badge-aware dialog back in town.
 
 ### How to run
 ```
 npm install
 npm run dev      # → http://localhost:5173
 ```
-Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (cancel). `npm run typecheck` for TS, `python3 tools/validate_data.py` for content.
+Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (cancel). Walking into NPCs/signs/doors interacts automatically. `npm run typecheck` for TS, `python3 tools/validate_data.py` for content.
+
+### Balance snapshot (tuned this pass, keep an eye on it)
+- Damage: `(level+2) * power/50 * atk/def * typeChart^0.7 * STAB 1.2 * 2.4` — softened type swings, levels dominate.
+- Stats grow 10%/level; XP to next level `5·L²`; wild XP `(14+7·L)·statTotal/130` (~4-6 wild wins/level early).
+- Sable at L6 counter-type: beatable ~L10 with a neutral move, easy with a caught counter (Tuft/Gulp). Brask: hard at L10, clutch at L13, comfy L15. A future pass should sim these curves properly instead of hand-tuning.
 
 ### Next steps
-1. **Content wave** — use `/generate-drake` + `/generate-zone` to grow toward the 30-drake / 3-zone MVP. The pipeline is fully data-driven now: new zones and drakes need **zero engine code**.
-2. **The Scald trial** — Warden Brask's cave zone + boss battle (extend trainers.json to multi-drake teams — already supported).
-3. **Bench synergy combos** — data exists in `data/synergies.json`; battle UI hook not built yet. This is the flagship differentiator.
-4. **Party/Codex menu** — view drakes outside battle, reorder party.
-5. **Audio** — chiptune loop for town/route/battle (Web Audio, no assets yet).
-6. **Mobile controls** — touch D-pad + A/B overlay (the game already scales to phone screens; it just needs inputs).
-7. **Deploy** — `npm run build` produces a static site; host anywhere (GitHub Pages / itch.io / Cloudflare).
+1. **Content wave** — `/generate-drake` + `/generate-zone` toward the 30-drake / 3-zone MVP. Zones, interiors, gated doors, trainers, and bosses are all pure JSON now — zero engine code.
+2. **Bench synergy combos** — data exists in `data/synergies.json`; battle UI hook not built yet. This is the flagship differentiator.
+3. **Party/Codex menu** — view drakes outside battle, reorder party, move management.
+4. **Audio** — chiptune loops (Web Audio, no assets yet).
+5. **Mobile controls** — touch D-pad + A/B overlay.
+6. **North gate** — Kindra's north exit is signposted and closed; zone 2 goes there.
+7. **Deploy** — `npm run build` is a static site; host anywhere (GitHub Pages / itch.io / Cloudflare).
 
 ---
 

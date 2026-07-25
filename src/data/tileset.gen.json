@@ -43,7 +43,23 @@
     "iwall_top": 38,
     "counter": 39,
     "shelf": 40,
-    "table": 41
+    "table": 41,
+    "lava_0": 42,
+    "lava_1": 43,
+    "lava_n": 44,
+    "lava_s": 45,
+    "lava_e": 46,
+    "lava_w": 47,
+    "basalt": 48,
+    "banner": 49,
+    "painting": 50,
+    "window_int": 51,
+    "stove": 52,
+    "sink": 53,
+    "stool": 54,
+    "chimney": 55,
+    "window_box": 56,
+    "doorstep": 57
   },
   "props": {
     "tree": {
@@ -85,6 +101,26 @@
     "plant": {
       "w": 16,
       "h": 24
+    },
+    "bookshelf": {
+      "w": 16,
+      "h": 24
+    },
+    "statue": {
+      "w": 16,
+      "h": 24
+    },
+    "cindergrass": {
+      "w": 16,
+      "h": 16
+    },
+    "barrel": {
+      "w": 16,
+      "h": 16
+    },
+    "crate": {
+      "w": 16,
+      "h": 16
     }
   }
 }

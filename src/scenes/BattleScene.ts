@@ -15,6 +15,8 @@ interface BattlePayload {
   kind: 'wild' | 'trainer';
   enemy?: { speciesId: string; level: number };
   trainerId?: string;
+  /** Backdrop palette — 'volcanic' inside the Scald, dusty field otherwise. */
+  biome?: 'field' | 'volcanic';
 }
 
 export class BattleScene extends Phaser.Scene {
@@ -53,6 +55,9 @@ export class BattleScene extends Phaser.Scene {
         return new DrakeInstance(id, m.level);
       });
     }
+    // Enemy drakes show as "Foe X" so mirror matches stay readable;
+    // cleared if the drake is caught and joins the party.
+    for (const d of this.enemyTeam) d.nickname = `Foe ${d.species.name}`;
     this.enemy = this.enemyTeam[0];
     this.enemy.resetBattleState();
 
@@ -65,13 +70,23 @@ export class BattleScene extends Phaser.Scene {
 
   private drawField(): void {
     const g = this.add.graphics();
-    // Dusty route backdrop: warm sky bands + sandy ground
-    const sky = [0x88b8d0, 0x98c4d8, 0xb0d0d8, 0xd0e0d8];
-    sky.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 18, VP_W, 18));
-    g.fillStyle(0xc8a868, 1).fillRect(0, 72, VP_W, VP_H - 72);
-    // Platforms
-    g.fillStyle(0xb08850, 1).fillEllipse(178, 74, 100, 26);
-    g.fillStyle(0xb08850, 1).fillEllipse(62, 116, 104, 28);
+    if (this.payload.biome === 'volcanic') {
+      // Inside the Scald: smoke bands, basalt ground, ember platforms
+      const smoke = [0x3a3038, 0x453a40, 0x554648, 0x685450];
+      smoke.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 18, VP_W, 18));
+      g.fillStyle(0x584a46, 1).fillRect(0, 72, VP_W, VP_H - 72);
+      g.fillStyle(0xc84a20, 1).fillEllipse(178, 74, 104, 28);
+      g.fillStyle(0x8a4432, 1).fillEllipse(178, 74, 96, 22);
+      g.fillStyle(0xc84a20, 1).fillEllipse(62, 116, 108, 30);
+      g.fillStyle(0x8a4432, 1).fillEllipse(62, 116, 100, 24);
+    } else {
+      // Dusty route backdrop: warm sky bands + sandy ground
+      const sky = [0x88b8d0, 0x98c4d8, 0xb0d0d8, 0xd0e0d8];
+      sky.forEach((c, i) => g.fillStyle(c, 1).fillRect(0, i * 18, VP_W, 18));
+      g.fillStyle(0xc8a868, 1).fillRect(0, 72, VP_W, VP_H - 72);
+      g.fillStyle(0xb08850, 1).fillEllipse(178, 74, 100, 26);
+      g.fillStyle(0xb08850, 1).fillEllipse(62, 116, 104, 28);
+    }
 
     // Combatants slide onto their platforms during the intro (FireRed entry).
     this.enemyImg = this.add.image(VP_W + 60, 46, `drake_${this.enemy.speciesId}`).setScale(0.72);
@@ -347,6 +362,7 @@ export class BattleScene extends Phaser.Scene {
       await this.textbox.show('. . .');
     }
     if (success) {
+      this.enemy.nickname = null; // drop the "Foe" battle label
       await this.textbox.show(`Gotcha! ${this.enemy.name.toUpperCase()} was bound!`);
       GameState.party.push(this.enemy);
       this.end('caught');

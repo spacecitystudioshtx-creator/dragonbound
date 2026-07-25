@@ -55,6 +55,8 @@ export interface LegendEntry {
   dialog?: string;
   /** Door tile: map id to enter (target map's 'default' spawn). */
   enter?: string;
+  /** Entry is blocked (dialog shown instead) until this flag is set. */
+  requires_flag?: string;
 }
 
 export interface MapDef {
@@ -87,5 +89,7 @@ export interface TrainerDef {
   name: string;
   team: { drake: string; level: number }[];
   win_flag: string;
+  /** Set win or lose — for story gates that only require facing the trainer. */
+  fought_flag?: string;
   reward_text?: string;
 }

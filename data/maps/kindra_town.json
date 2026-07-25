@@ -25,7 +25,10 @@
     "H": { "tile": "door", "enter": "player_home" },
     "P": { "tile": "door", "enter": "pyre_hall" },
     "F": { "tile": "door", "enter": "fen_home" },
-    "C": { "tile": "door", "enter": "kindra_shop" }
+    "C": { "tile": "door", "enter": "kindra_shop" },
+    "c": { "tile": "chimney" },
+    "v": { "tile": "window_box" },
+    "D": { "tile": "doorstep" }
   },
   "rows": [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
@@ -33,26 +36,26 @@
     "TT..........ffnff...........TT",
     "TT.........3333333..........TT",
     "TT.........4444444..........TT",
-    "TT..11111..5555555...11111..TT",
+    "TT..1c111..5555555...11c11..TT",
     "TT..22222..QQQPQQQ...22222..TT",
-    "TT..WwHwW...x...x....WwFwW..TT",
-    "TT....p.......p........p....TT",
+    "TT..WvHvW...x.D.x....WvFvW..TT",
+    "TT....D.......p........D....TT",
     "TT....p.......p........p..s.TT",
     "TTpppppppppppppppppppppppppppp",
     "TT.....,,.........m.........TT",
-    "TT...11111.fffff..o.........TT",
+    "TT...1c111.fffff..o.........TT",
     "TT...22222.f***f............TT",
-    "TT...WwCwW.fffff............TT",
-    "TT..................~~~~~~..TT",
+    "TT...WvCvW.fffff............TT",
+    "TT.....D............~~~~~~..TT",
     "TT.......m,.........~~~~~~..TT",
     "TT..................~~~~~~..TT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "npcs": [
-    { "id": "acolyte", "x": 12, "y": 8, "sprite": "villager_c", "facing": "down", "dialog": "kindra.acolyte" },
-    { "id": "neighbor_fen", "x": 24, "y": 11, "sprite": "villager_a", "facing": "up", "dialog": "kindra.neighbor_fen" },
-    { "id": "kid", "x": 19, "y": 12, "sprite": "villager_d", "facing": "left", "dialog": "kindra.kid" }
+    { "id": "acolyte", "x": 12, "y": 8, "sprite": "acolyte", "facing": "down", "dialog": "kindra.acolyte" },
+    { "id": "neighbor_fen", "x": 24, "y": 11, "sprite": "fen", "facing": "up", "dialog": "kindra.neighbor_fen" },
+    { "id": "kid", "x": 19, "y": 12, "sprite": "kid", "facing": "left", "dialog": "kindra.kid" }
   ],
   "exits": [
     { "x": 29, "y": 10, "to": "dustway_route", "spawn": "west" },

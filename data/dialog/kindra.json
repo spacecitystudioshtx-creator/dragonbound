@@ -6,6 +6,7 @@
       "name": "Elder Moss",
       "select": [
         { "unless_flag": "starter_given", "use": "intro" },
+        { "if_flag": "brask_beaten", "use": "sigil" },
         { "use": "post_starter" }
       ],
       "sections": {
@@ -24,6 +25,12 @@
           "Rest a moment by the pyre.",
           { "heal_party": true },
           "Warden Brask waits at the Scald. She will not go easy on you."
+        ],
+        "sigil": [
+          "The EMBER SIGIL... so the Pyre chose true after all.",
+          "One flame lit, seven yet dark. The north gate will open before long.",
+          "Rest by the pyre, warden-to-be.",
+          { "heal_party": true }
         ]
       }
     },

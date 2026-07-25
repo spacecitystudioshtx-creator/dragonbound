@@ -23,7 +23,7 @@ export interface TileInfo {
   /** Animation key created in BootScene ('tile_water', 'tile_flowers'). */
   anim?: string;
   /** Auto-edge family: fringe overlays drawn where neighbors differ. */
-  edges?: 'path' | 'water';
+  edges?: 'path' | 'water' | 'lava';
 }
 
 export const TILES: Record<string, TileInfo> = {
@@ -71,6 +71,28 @@ export const TILES: Record<string, TileInfo> = {
   bed:         { prop: 'bed', base: 'floor_wood', solid: true },
   plant:       { prop: 'plant', base: 'floor_wood', solid: true },
   brazier_in:  { prop: 'brazier', base: 'floor_stone', solid: true },
+  // furniture & wall detail
+  painting:    { frame: 'painting', solid: true },
+  window_int:  { frame: 'window_int', solid: true },
+  stove:       { frame: 'stove', solid: true },
+  sink:        { frame: 'sink', solid: true },
+  stool:       { frame: 'stool', solid: true },
+  banner:      { frame: 'banner', solid: true },
+  bookshelf:   { prop: 'bookshelf', base: 'floor_wood', solid: true },
+  barrel:      { prop: 'barrel', base: 'floor_wood', solid: true },
+  crate:       { prop: 'crate', base: 'floor_wood', solid: true },
+  statue:      { prop: 'statue', base: 'floor_stone', solid: true },
+  // exterior detail
+  chimney:     { frame: 'chimney', solid: true },
+  window_box:  { frame: 'window_box', solid: true },
+  doorstep:    { frame: 'doorstep' },
+  // the Scald
+  lava:        { frame: 'lava_0', anim: 'tile_lava', solid: true, edges: 'lava' },
+  basalt:      { frame: 'basalt' },
+  cinder_grass:{ prop: 'cindergrass', base: 'basalt' },
+  brazier_cave:{ prop: 'brazier', base: 'basalt', solid: true },
+  rock_cave:   { prop: 'rock', base: 'basalt', solid: true },
+  statue_cave: { prop: 'statue', base: 'basalt', solid: true },
 };
 
 export function tileInfo(name: string): TileInfo {

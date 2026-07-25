@@ -24,7 +24,7 @@
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "npcs": [
-    { "id": "rival_sable", "x": 18, "y": 4, "sprite": "villager_d", "facing": "down", "dialog": "dustway.rival_sable" }
+    { "id": "rival_sable", "x": 18, "y": 4, "sprite": "sable", "facing": "down", "dialog": "dustway.rival_sable" }
   ],
   "exits": [
     { "x": 0, "y": 5, "to": "kindra_town", "spawn": "from_dustway" },

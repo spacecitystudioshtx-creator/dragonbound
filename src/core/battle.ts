@@ -28,10 +28,13 @@ export function executeMove(attacker: DrakeInstance, defender: DrakeInstance, mo
   // Damage
   if (move.power > 0) {
     const typeMult = typeMultiplier(move.type, defender.species.type);
-    const stab = move.type === attacker.species.type ? 1.25 : 1.0;
+    // Soften type swings (2.0 -> ~1.6, 0.5 -> ~0.6) so counters are strong,
+    // not absolute; levels carry more weight than the chart.
+    const softMult = Math.pow(typeMult, 0.7);
+    const stab = move.type === attacker.species.type ? 1.2 : 1.0;
     const effDef = move.effect === 'ignore_def_buffs' ? defender.def : defender.def * defender.defMod;
-    const raw = (attacker.level * 0.5 + 2) * (move.power / 50) * (attacker.atk / effDef);
-    const dmg = Math.max(1, Math.floor(raw * typeMult * stab * (0.85 + Math.random() * 0.15) * 3));
+    const raw = (attacker.level + 2) * (move.power / 50) * (attacker.atk / effDef);
+    const dmg = Math.max(1, Math.floor(raw * softMult * stab * (0.85 + Math.random() * 0.15) * 2.4));
     defender.hp = Math.max(0, defender.hp - dmg);
 
     if (typeMult > 1) msgs.push(`It's super effective!`);
@@ -117,7 +120,8 @@ export function tryCapture(target: DrakeInstance): [boolean, number] {
   return [false, Math.min(2, Math.floor((chance / Math.max(roll, 0.01)) * 3))];
 }
 
+// Tuned for FireRed-like pacing: ~4-6 wild wins per level early on.
 export function xpReward(enemy: DrakeInstance, isTrainer: boolean): number {
   const statTotal = Object.values(enemy.species.base_stats).reduce((a, b) => a + b, 0);
-  return Math.floor((6 + enemy.level * 3) * (statTotal / 130) * (isTrainer ? 1.5 : 1));
+  return Math.floor((14 + enemy.level * 7) * (statTotal / 130) * (isTrainer ? 1.5 : 1));
 }

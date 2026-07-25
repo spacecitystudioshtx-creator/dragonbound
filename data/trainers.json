@@ -8,7 +8,26 @@
         { "drake": "$rival_starter", "level": 6 }
       ],
       "win_flag": "sable_1_beaten",
+      "fought_flag": "sable_1_fought",
       "reward_text": "Sable: Tch. Enjoy it while it lasts. The Scald will eat you alive."
+    },
+    "scald_acolyte": {
+      "name": "Ashen Acolyte",
+      "team": [
+        { "drake": "flick", "level": 5 },
+        { "drake": "flick", "level": 6 }
+      ],
+      "win_flag": "acolyte_1_beaten",
+      "reward_text": "Acolyte: The Warden's flame burns far hotter than mine. Go see for yourself."
+    },
+    "warden_brask": {
+      "name": "Warden Brask",
+      "team": [
+        { "drake": "flick", "level": 8 },
+        { "drake": "ember", "level": 10 }
+      ],
+      "win_flag": "brask_beaten",
+      "reward_text": "Brask: Well fought, hatchling. The EMBER SIGIL is yours — the first of eight."
     }
   }
 }

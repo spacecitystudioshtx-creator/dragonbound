@@ -6,6 +6,7 @@
       "name": "Sable",
       "select": [
         { "if_flag": "sable_1_beaten", "use": "post_battle" },
+        { "if_flag": "sable_1_fought", "use": "rematch" },
         { "use": "first_meeting" }
       ],
       "sections": {
@@ -13,6 +14,11 @@
           "So the Elder gave you one too.",
           "Don't flatter yourself. Every generation gets a starter — it doesn't mean anything.",
           "I'll beat you to the Scald. That's a promise.",
+          { "start_battle": "rival_sable_1" }
+        ],
+        "rematch": [
+          "Back for another beating?",
+          "Fine. I could use the warm-up.",
           { "start_battle": "rival_sable_1" }
         ],
         "post_battle": [

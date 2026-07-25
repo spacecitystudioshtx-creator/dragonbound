@@ -17,25 +17,12 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
   up: { dx: 0, dy: -1 },
 };
 
-// Row order of directions in the character sheets (RPG-Maker-style).
+// Row order of directions in the generated character sheets.
 const DIR_ROW: Record<string, number> = { down: 0, left: 1, right: 2, up: 3 };
 
-// NPC sprite registry → characters.png (12 cols: 4 chars × 3 walk frames,
-// 8 rows: 2 bands × 4 directions).
-const NPC_SPRITES: Record<string, { char: number; band: number }> = {
-  villager_a: { char: 0, band: 0 },
-  villager_b: { char: 1, band: 0 },
-  villager_c: { char: 2, band: 0 },
-  villager_d: { char: 3, band: 0 },
-  slime: { char: 0, band: 1 },
-  ghost: { char: 1, band: 1 },
-  bird: { char: 2, band: 1 },
-  spider: { char: 3, band: 1 },
-};
-
-function npcFrame(sprite: string, facing: string): number {
-  const s = NPC_SPRITES[sprite] ?? NPC_SPRITES.villager_a;
-  return (s.band * 4 + (DIR_ROW[facing] ?? 0)) * 12 + s.char * 3 + 1;
+// Generated sheets: 3 cols (stepA, idle, stepB) × 4 direction rows.
+function npcFrame(facing: string): number {
+  return (DIR_ROW[facing] ?? 0) * 3 + 1;
 }
 
 interface Cell {
@@ -43,6 +30,7 @@ interface Cell {
   encounter: boolean;
   dialog: string | null;
   enter: string | null;
+  requiresFlag: string | null;
   doorImg: Phaser.GameObjects.Image | null;
 }
 
@@ -149,6 +137,7 @@ export class WorldScene extends Phaser.Scene {
           encounter: entry.encounter ?? false,
           dialog: entry.dialog ?? null,
           enter: entry.enter ?? null,
+          requiresFlag: entry.requires_flag ?? null,
           doorImg,
         });
       }
@@ -178,7 +167,8 @@ export class WorldScene extends Phaser.Scene {
       if (npc.vanish_flag && GameState.hasFlag(npc.vanish_flag)) continue;
       const facing = npc.facing ?? 'down';
       const spr = this.add
-        .sprite(npc.x * TILE + 8, npc.y * TILE + 8, 'characters', npcFrame(npc.sprite, facing))
+        .sprite(npc.x * TILE + 8, npc.y * TILE + TILE, `char_${npc.sprite}`, npcFrame(facing))
+        .setOrigin(0.5, 1)
         .setDepth(npc.y * TILE + TILE);
       this.npcSprites.set(npc.id, spr);
       this.grid[npc.y][npc.x].solid = true;
@@ -186,30 +176,21 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private spawnPlayer(x: number, y: number, facing: string): void {
-    this.playerSprite = this.add.sprite(x * TILE + 8, y * TILE + 8, 'player', 0);
-    for (const dir of Object.keys(DIR_ROW)) {
-      const row = DIR_ROW[dir];
-      if (!this.anims.exists(`walk_${dir}`)) {
-        this.anims.create({
-          key: `walk_${dir}`,
-          frames: this.anims.generateFrameNumbers('player', { start: row * 4, end: row * 4 + 3 }),
-          frameRate: 10,
-          repeat: -1,
-        });
-      }
-    }
+    this.playerSprite = this.add
+      .sprite(x * TILE + 8, y * TILE + TILE, 'char_player', 1)
+      .setOrigin(0.5, 1);
     this.setPlayerIdle(facing);
   }
 
   private setPlayerIdle(facing: string): void {
     this.playerSprite.stop();
-    this.playerSprite.setFrame(DIR_ROW[facing] * 4);
+    this.playerSprite.setFrame(DIR_ROW[facing] * 3 + 1);
   }
 
   // ── Movement ──────────────────────────────────────────────────────────────
 
   update(): void {
-    if (this.playerSprite) this.playerSprite.setDepth(this.playerSprite.y + 8);
+    if (this.playerSprite) this.playerSprite.setDepth(this.playerSprite.y);
     if (this.moving || this.uiLocked || this.textbox?.isOpen) return;
     const k = this.keys;
     let dir: string | null = null;
@@ -239,7 +220,7 @@ export class WorldScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.playerSprite,
       x: nx * TILE + 8,
-      y: ny * TILE + 8,
+      y: ny * TILE + TILE,
       duration: STEP_MS,
       onComplete: () => {
         GameState.x = nx;
@@ -260,7 +241,7 @@ export class WorldScene extends Phaser.Scene {
     this.suppressBump = true;
     if (npc) {
       const facePlayer = { down: 'up', up: 'down', left: 'right', right: 'left' }[GameState.facing]!;
-      this.npcSprites.get(npc.id)?.setFrame(npcFrame(npc.sprite, facePlayer));
+      this.npcSprites.get(npc.id)?.setFrame(npcFrame(facePlayer));
       this.runDialog(npc.dialog);
     } else if (cell.enter) {
       this.enterDoor(nx, ny, cell);
@@ -295,8 +276,12 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  /** Door-opening animation, then move inside. */
+  /** Door-opening animation, then move inside. Locked doors explain themselves. */
   private enterDoor(x: number, y: number, cell: Cell): void {
+    if (cell.requiresFlag && !GameState.hasFlag(cell.requiresFlag)) {
+      if (cell.dialog) this.runDialog(cell.dialog);
+      return;
+    }
     this.uiLocked = true;
     const img = cell.doorImg;
     img?.setFrame(frameOf('door_half'));
@@ -320,7 +305,7 @@ export class WorldScene extends Phaser.Scene {
     const npc = (this.map.npcs ?? []).find((n) => n.x === tx && n.y === ty && this.npcSprites.has(n.id));
     if (npc) {
       const facePlayer = { down: 'up', up: 'down', left: 'right', right: 'left' }[GameState.facing]!;
-      this.npcSprites.get(npc.id)?.setFrame(npcFrame(npc.sprite, facePlayer));
+      this.npcSprites.get(npc.id)?.setFrame(npcFrame(facePlayer));
       this.runDialog(npc.dialog);
       return;
     }
@@ -464,6 +449,7 @@ export class WorldScene extends Phaser.Scene {
   // ── Battles ───────────────────────────────────────────────────────────────
 
   private startBattle(payload: any): void {
+    payload.biome = this.map.id.startsWith('scald') ? 'volcanic' : 'field';
     this.uiLocked = true;
     this.cameras.main.flash(150, 255, 255, 255);
     this.time.delayedCall(250, () => {
@@ -485,6 +471,10 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.fadeIn(250, 0, 0, 0);
     GameState.save();
 
+    if (data?.trainerId) {
+      const fought = TRAINERS[data.trainerId]?.fought_flag;
+      if (fought) GameState.setFlag(fought);
+    }
     if (data?.outcome === 'trainer_win' && data.trainerId) {
       const t = TRAINERS[data.trainerId];
       GameState.setFlag(t.win_flag);

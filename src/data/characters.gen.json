@@ -1,0 +1,17 @@
+{
+  "frameW": 16,
+  "frameH": 20,
+  "chars": [
+    "player",
+    "ma",
+    "elder",
+    "acolyte",
+    "kid",
+    "fen",
+    "shopkeeper",
+    "sable",
+    "brask",
+    "villager",
+    "pet"
+  ]
+}

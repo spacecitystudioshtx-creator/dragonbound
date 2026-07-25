@@ -4,23 +4,27 @@
   "legend": {
     "t": { "tile": "iwall_top" },
     "i": { "tile": "iwall" },
+    "P": { "tile": "painting" },
+    "V": { "tile": "window_int" },
     "F": { "tile": "floor_wood" },
     "M": { "tile": "mat" },
     "B": { "tile": "bed" },
     "A": { "tile": "table" },
+    "u": { "tile": "stool" },
+    "b": { "tile": "bookshelf" },
     "L": { "tile": "plant" }
   },
   "rows": [
     "ttttttttt",
-    "iiiiiiiii",
-    "FBFFFFFLF",
-    "FFFAFFFFF",
-    "FFFFFFFFF",
+    "iiPiViiii",
+    "FBFFFFFbF",
+    "FFFAuFFFF",
+    "FFFFFFFLF",
     "FFFFMFFFF",
     "ttttttttt"
   ],
   "npcs": [
-    { "id": "fen_pet", "x": 5, "y": 3, "sprite": "bird", "facing": "down", "dialog": "kindra.fen_pet" }
+    { "id": "fen_pet", "x": 6, "y": 3, "sprite": "pet", "facing": "down", "dialog": "kindra.fen_pet" }
   ],
   "exits": [
     { "x": 4, "y": 5, "to": "kindra_town", "spawn": "from_fen" }

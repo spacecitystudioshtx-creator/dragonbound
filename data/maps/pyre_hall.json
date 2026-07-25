@@ -4,15 +4,17 @@
   "legend": {
     "t": { "tile": "iwall_top" },
     "q": { "tile": "wall_stone" },
+    "B": { "tile": "banner" },
     "G": { "tile": "floor_stone" },
     "R": { "tile": "rug" },
     "z": { "tile": "brazier_in" },
+    "S": { "tile": "statue" },
     "M": { "tile": "mat" }
   },
   "rows": [
     "tttttttttttt",
-    "qqqqqqqqqqqq",
-    "GGzGGRGGzGGG",
+    "qqqBqqqqBqqq",
+    "GGzGSRSGzGGG",
     "GGGGGRGGGGGG",
     "GGGGGRGGGGGG",
     "GGGGGRGGGGGG",
@@ -21,7 +23,7 @@
     "tttttttttttt"
   ],
   "npcs": [
-    { "id": "elder_moss", "x": 5, "y": 3, "sprite": "villager_c", "facing": "down", "dialog": "kindra.elder_moss" }
+    { "id": "elder_moss", "x": 5, "y": 3, "sprite": "elder", "facing": "down", "dialog": "kindra.elder_moss" }
   ],
   "exits": [
     { "x": 5, "y": 7, "to": "kindra_town", "spawn": "from_pyre" }

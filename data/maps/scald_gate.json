@@ -8,7 +8,7 @@
     ",": { "tile": "grass2" },
     "p": { "tile": "path" },
     "r": { "tile": "rock" },
-    "G": { "tile": "door", "dialog": "scald_gate.gate" },
+    "G": { "tile": "door", "enter": "scald_cave", "requires_flag": "sable_1_fought", "dialog": "scald_gate.gate" },
     "x": { "tile": "brazier" }
   },
   "rows": [
@@ -25,13 +25,14 @@
     "SSSSSSSSSSSSSSSSSS"
   ],
   "npcs": [
-    { "id": "warden_brask", "x": 10, "y": 5, "sprite": "villager_b", "facing": "left", "dialog": "scald_gate.brask" }
+    { "id": "warden_brask", "x": 10, "y": 5, "sprite": "brask", "facing": "left", "dialog": "scald_gate.brask", "vanish_flag": "sable_1_fought" }
   ],
   "exits": [
     { "x": 0, "y": 6, "to": "dustway_route", "spawn": "from_scald" }
   ],
   "spawns": {
     "default": { "x": 1, "y": 6, "facing": "right" },
-    "west": { "x": 1, "y": 6, "facing": "right" }
+    "west": { "x": 1, "y": 6, "facing": "right" },
+    "from_cave": { "x": 8, "y": 4, "facing": "down" }
   }
 }
