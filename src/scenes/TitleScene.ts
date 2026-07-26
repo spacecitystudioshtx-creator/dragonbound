@@ -27,7 +27,7 @@ export class TitleScene extends Phaser.Scene {
     g.fillStyle(0x883020, 1).fillRect(0, 118, VP_W, 3);
     g.fillStyle(0x502018, 1).fillRect(0, 121, VP_W, VP_H - 121);
 
-    this.add.image(VP_W / 2, 66, 'drake_ashvane').setScale(0.9);
+    this.add.image(VP_W / 2, 66, 'drake_ashvane').setScale(1.1);
 
     this.add
       .text(VP_W / 2, 116, 'DRAGONBOUND', {

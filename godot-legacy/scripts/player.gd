@@ -12,6 +12,9 @@ signal tile_stepped
 const SPEED := 128.0
 # Size of one tile in pixels — used for grid-aligned movement
 const TILE_SIZE := 16
+const SPRITE_W := 16
+const SPRITE_H := 16
+const TRAINER_SHEET_PATH := "res://art/player/kindra_trainer_sheet.png"
 
 # Current facing direction for animation
 var facing := Vector2.DOWN
@@ -19,6 +22,7 @@ var facing := Vector2.DOWN
 var is_moving := false
 # Target position for grid-based movement
 var target_pos := Vector2.ZERO
+var map_bounds := Rect2()
 
 # Reference to the animated sprite
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -28,6 +32,7 @@ var joystick_input := Vector2.ZERO
 
 
 func _ready() -> void:
+	_apply_trainer_sheet()
 	# Snap to tile center (not corner) — floor to tile, then offset by half-tile
 	position = (position / float(TILE_SIZE)).floor() * TILE_SIZE + Vector2(TILE_SIZE / 2, TILE_SIZE / 2)
 	target_pos = position
@@ -44,8 +49,6 @@ func _physics_process(delta: float) -> void:
 			_play_idle()
 		return
 
-	z_index = int(position.y)   ## y-sort: higher y = renders in front of objects above
-
 	if is_moving:
 		_move_toward_target(delta)
 	else:
@@ -60,12 +63,8 @@ func _move_toward_target(delta: float) -> void:
 		position = target_pos
 		is_moving = false
 		tile_stepped.emit()
-		# Auto-talk: if an NPC is one tile ahead in the facing direction, start dialog.
-		if GameMode.current() == GameMode.Mode.OVERWORLD:
-			_try_interact()
-		# Chain the next step only if dialog didn't open.
-		if GameMode.current() == GameMode.Mode.OVERWORLD:
-			_try_start_move()
+		# Chain the next step immediately (no turn delay while already walking)
+		_try_start_move()
 		if not is_moving:
 			_play_idle()
 	else:
@@ -120,28 +119,25 @@ func _get_input_direction() -> Vector2:
 	if joystick_input.length() > 0.3:
 		dir = joystick_input
 
+	# Snap to dominant axis — no diagonal movement
 	if dir == Vector2.ZERO:
 		return Vector2.ZERO
-
-	# Require one axis to be clearly dominant (>0.4 difference) to avoid
-	# rapid flipping when joystick sits diagonally — which causes visual spinning.
-	# 0.4 means one axis must dominate by 40% before we commit to a direction turn.
-	var dx: float = abs(dir.x)
-	var dy: float = abs(dir.y)
-	const AXIS_BIAS := 0.4
-	if dx > dy + AXIS_BIAS:
+	if abs(dir.x) > abs(dir.y):
 		return Vector2(sign(dir.x), 0)
-	elif dy > dx + AXIS_BIAS:
-		return Vector2(0, sign(dir.y))
 	else:
-		# Ambiguous diagonal — stay in current facing direction rather than flipping.
-		return facing
+		return Vector2(0, sign(dir.y))
 
 
 ## Check if the target position is walkable.
 ## Uses direct tile lookup on the obstacle layer (data-driven, like Pokémon)
 ## with a physics raycast as fallback for non-tile obstacles.
 func _can_move_to(target: Vector2) -> bool:
+	if map_bounds.size != Vector2.ZERO:
+		var min_pos := map_bounds.position + Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+		var max_pos := map_bounds.end - Vector2(TILE_SIZE / 2.0, TILE_SIZE / 2.0)
+		if target.x < min_pos.x or target.x > max_pos.x or target.y < min_pos.y or target.y > max_pos.y:
+			return false
+
 	## Direct tile check — any tile on the obstacle layer blocks movement
 	var tile_coord := Vector2i(int(target.x / TILE_SIZE), int(target.y / TILE_SIZE))
 	var obs := _get_obstacle_layer()
@@ -155,6 +151,10 @@ func _can_move_to(target: Vector2) -> bool:
 	query.exclude = [get_rid()]
 	var result := space.intersect_ray(query)
 	return result.is_empty()
+
+
+func set_map_bounds(bounds: Rect2) -> void:
+	map_bounds = bounds
 
 
 var _obs_layer_cache: TileMapLayer = null
@@ -186,27 +186,38 @@ func _play_walk() -> void:
 		Vector2.RIGHT: sprite.play("walk_right")
 
 
-## ── Interaction (A / Enter / tap) ────────────────────────────────────────────
-
-func _unhandled_input(event: InputEvent) -> void:
-	if GameMode.current() != GameMode.Mode.OVERWORLD:
+func _apply_trainer_sheet() -> void:
+	var img := Image.new()
+	var err := img.load(ProjectSettings.globalize_path(TRAINER_SHEET_PATH))
+	if err != OK:
+		push_warning("player: could not load trainer sheet at %s" % TRAINER_SHEET_PATH)
 		return
-	if event.is_action_pressed("ui_accept"):
-		_try_interact()
-		get_viewport().set_input_as_handled()
+	var tex := ImageTexture.create_from_image(img)
+	var frames := sprite.sprite_frames
+	if frames == null:
+		return
+	for anim_name in frames.get_animation_names():
+		for i in frames.get_frame_count(anim_name):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = tex
+			atlas.region = _trainer_region_for_anim(String(anim_name), i)
+			var duration := frames.get_frame_duration(anim_name, i)
+			frames.set_frame(anim_name, i, atlas, duration)
 
 
-## Cast a check 1 tile ahead — if an interactable Area2D is there, trigger it.
-func _try_interact() -> void:
-	var check_pos := position + facing * float(TILE_SIZE)
-	for area in get_tree().get_nodes_in_group("interactable"):
-		if not area is Area2D:
-			continue
-		var area2d := area as Area2D
-		var dist: float = area2d.global_position.distance_to(check_pos)
-		if dist < float(TILE_SIZE) * 0.75:
-			var df: String  = area.get_meta("dialog_file", "")
-			var nid: String = area.get_meta("node_id",     "")
-			if df != "" and nid != "":
-				SignalBus.dialog_requested.emit(df, nid)
-				return
+func _trainer_region_for_anim(anim_name: String, frame_idx: int) -> Rect2:
+	var row := 0
+	if anim_name.ends_with("_up"):
+		row = 1
+	elif anim_name.ends_with("_left"):
+		row = 2
+	elif anim_name.ends_with("_right"):
+		row = 3
+	var col := 0
+	if anim_name.begins_with("walk_"):
+		col = 1 if frame_idx == 0 else 3
+	return Rect2(col * SPRITE_W, row * SPRITE_H, SPRITE_W, SPRITE_H)
+
+
+func refresh_trainer_sheet() -> void:
+	_apply_trainer_sheet()

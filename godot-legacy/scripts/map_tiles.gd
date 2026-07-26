@@ -19,6 +19,18 @@ extends Node
 ## Atlas source ids
 const SRC_GROUND := 0
 const SRC_VILLAGE := 1
+const SRC_KINDRA_SCREEN := 2
+const SRC_COLLISION := 3
+const SRC_INTERIOR := 4
+const SRC_ROOM_HOME := 5
+const SRC_ROOM_SHOP := 6
+const SRC_ROOM_HOUSE := 7
+const SRC_ROOM_PYRE := 8
+const SRC_ROOM_ELDER := 9
+const SRC_KINDRA_EAST := 10
+const SRC_DUSTWAY_ENTRY := 11
+const SRC_KINDRA_FULL := 12
+const SRC_DUSTWAY_FULL := 13
 
 ## ── Ground strip indices (source 0) ──────────────────────────────────────────
 const GRASS        := Vector2i(0, 0)
@@ -37,6 +49,25 @@ const FENCE        := Vector2i(12, 0)
 const SIGN         := Vector2i(13, 0)
 const STUMP        := Vector2i(14, 0)
 const ROCK         := Vector2i(15, 0)
+const COLLISION    := Vector2i(0, 0)
+
+## ── Interior atlas indices (source 4) ───────────────────────────────────────
+const INT_FLOOR      := Vector2i(0, 0)
+const INT_FLOOR_ALT  := Vector2i(1, 0)
+const INT_WALL_TOP   := Vector2i(2, 0)
+const INT_WALL_MID   := Vector2i(3, 0)
+const INT_WALL_SIDE  := Vector2i(4, 0)
+const INT_RUG        := Vector2i(5, 0)
+const INT_TABLE      := Vector2i(6, 0)
+const INT_CHAIR      := Vector2i(7, 0)
+const INT_COUNTER    := Vector2i(8, 0)
+const INT_SHELF      := Vector2i(9, 0)
+const INT_PLANT      := Vector2i(10, 0)
+const INT_BED        := Vector2i(11, 0)
+const INT_PC         := Vector2i(12, 0)
+const INT_TV         := Vector2i(13, 0)
+const INT_STAIRS     := Vector2i(14, 0)
+const INT_EXIT_MAT   := Vector2i(15, 0)
 
 ## Back-compat aliases (old map scripts expected these names from the 10-tile
 ## strip). Kept so existing scripts don't all have to change at once.
@@ -52,12 +83,13 @@ const TALL_GR  := TALL_GRASS
 ##
 ## Coordinates below were read from /tmp/village_labeled.png (grid overlay).
 
-## Small round 2×2 tree (soft bushy oak) — Ninja Adventure village atlas.
+## Small round 2×2 tree (bushy oak) — Ninja Adventure village atlas.
+## Atlas (4,6)-(5,7). Old (0,3)-(1,4) coords pointed to a peach pottery prop.
 const PROP_TREE_SMALL := [
-	{"dx": 0, "dy": 0, "c":  0, "r": 3, "solid": true},
-	{"dx": 1, "dy": 0, "c":  1, "r": 3, "solid": true},
-	{"dx": 0, "dy": 1, "c":  0, "r": 4, "solid": true},
-	{"dx": 1, "dy": 1, "c":  1, "r": 4, "solid": false},  ## trunk base walkable behind
+	{"dx": 0, "dy": 0, "c":  4, "r": 6, "solid": true},
+	{"dx": 1, "dy": 0, "c":  5, "r": 6, "solid": true},
+	{"dx": 0, "dy": 1, "c":  4, "r": 7, "solid": true},
+	{"dx": 1, "dy": 1, "c":  5, "r": 7, "solid": false},  ## trunk base walkable behind
 ]
 
 ## Large 2×3 tree (trunk + canopy).

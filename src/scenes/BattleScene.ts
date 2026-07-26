@@ -92,8 +92,9 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Combatants slide onto their platforms during the intro (FireRed entry).
-    this.enemyImg = this.add.image(VP_W + 60, 46, `drake_${this.enemy.speciesId}`).setScale(0.72);
-    this.playerImg = this.add.image(-60, 88, `drake_${this.player.speciesId}`).setScale(0.8).setFlipX(true);
+    // Drake sprites are 64x64 GBA-native — enemy slightly reduced for depth.
+    this.enemyImg = this.add.image(VP_W + 60, 46, `drake_${this.enemy.speciesId}`).setScale(0.9);
+    this.playerImg = this.add.image(-60, 88, `drake_${this.player.speciesId}`).setScale(1).setFlipX(true);
 
     this.dispPlayerHp = this.player.hp;
     this.dispEnemyHp = this.enemy.hp;

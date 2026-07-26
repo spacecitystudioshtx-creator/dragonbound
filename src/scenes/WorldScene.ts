@@ -411,7 +411,7 @@ export class WorldScene extends Phaser.Scene {
         const cx = 53 + i * 67;
         const box = this.add.graphics().setScrollFactor(0).setDepth(996);
         objs.push(box);
-        const spr = this.add.image(cx, 48, `drake_${id}`).setScale(0.52).setScrollFactor(0).setDepth(997);
+        const spr = this.add.image(cx, 48, `drake_${id}`).setScale(0.68).setScrollFactor(0).setDepth(997);
         objs.push(spr);
         const name = this.add.text(cx, 80, DRAKES[id].name.toUpperCase(), {
           fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#383030', resolution: 3,
@@ -437,7 +437,7 @@ export class WorldScene extends Phaser.Scene {
           s.box.clear();
           s.box.fillStyle(i === sel ? 0xfff0c8 : 0xefe8dc, 1).fillRoundedRect(cx - 27, 20, 54, 54, 4);
           s.box.lineStyle(1, i === sel ? 0xd8a038 : 0xc8c0b0, 1).strokeRoundedRect(cx - 27, 20, 54, 54, 4);
-          s.spr.setScale(i === sel ? 0.58 : 0.48).setAlpha(i === sel ? 1 : 0.82);
+          s.spr.setScale(i === sel ? 0.75 : 0.62).setAlpha(i === sel ? 1 : 0.82);
           s.name.setColor(i === sel ? '#c03028' : '#383030');
         });
         cursor.setX(53 + sel * 67);

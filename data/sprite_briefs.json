@@ -1,6 +1,27 @@
 {
   "_schema_version": 1,
-  "_doc": "Queue of sprite-generation briefs for drakes. Once local Stable Diffusion is available, the nightly AFK pipeline will pull these and generate 16x16 pixel art. Brief format: see generate-drake SKILL.md.",
-  "queue": [],
+  "_doc": "Queue of sprite-generation briefs for drakes. Once local Stable Diffusion is available, the nightly AFK pipeline will pull these and generate 64x64 pixel art. Brief format: see generate-drake SKILL.md.",
+  "queue": [
+    {
+      "drake_id": "ember",
+      "brief": "64x64 pixel art, front-facing combat sprite, GBA Pokemon FireRed style. Small bipedal dragon hatchling, deep red-orange scaled body with cream belly, two small curling horns, big yellow expressive eyes, tiny folded wings on back, plume of orange flame at the tail tip. Cocky stance, mouth slightly open showing tiny fangs. Crisp pixel outlines, limited 16-color warm palette, transparent background, no shading gradients.",
+      "queued_at": "2026-04-30T00:00:00Z"
+    },
+    {
+      "drake_id": "flick",
+      "brief": "64x64 pixel art, front-facing combat sprite, GBA Pokemon FireRed style. Small fox-like beast with reddish-orange fur and cream chest, three-tipped tail where each tip is lit as a tiny flame, perky ears with dark inner tufts, one fang showing in a mischievous grin. Sitting on hind legs. Crisp pixel outlines, warm fire palette, transparent background, no gradients.",
+      "queued_at": "2026-04-30T00:00:00Z"
+    },
+    {
+      "drake_id": "tuft",
+      "brief": "64x64 pixel art, front-facing combat sprite, GBA Pokemon FireRed style. Small round mossy creature like a fluffy rabbit covered in green moss, two leaf-shaped ears, two short twig horns, large curious black eyes, soft moss tuft for a tail. Sitting upright on small paws. Crisp pixel outlines, leafy green palette with brown twig accents, transparent background, no gradients.",
+      "queued_at": "2026-04-30T00:00:00Z"
+    },
+    {
+      "drake_id": "gulp",
+      "brief": "64x64 pixel art, front-facing combat sprite, GBA Pokemon FireRed style. Small chubby pond creature, slick blue-green skin with pale cyan belly, oversized round mouth open in surprised O-shape, two tiny webbed feet, single water-droplet shape on the forehead. Stout frog-tadpole hybrid silhouette. Crisp pixel outlines, blue-cyan palette, transparent background, no gradients.",
+      "queued_at": "2026-04-30T00:00:00Z"
+    }
+  ],
   "generated": []
 }

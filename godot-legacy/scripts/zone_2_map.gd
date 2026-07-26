@@ -6,6 +6,13 @@ extends Node2D
 const TILE_SIZE := 16
 const MAP_W := 20
 const MAP_H := 20
+const KINDRA_GRASS_TILES := [Vector2i(0, 3), Vector2i(5, 0), Vector2i(6, 1), Vector2i(9, 5), Vector2i(14, 5)]
+const KINDRA_PATH := Vector2i(1, 4)
+const KINDRA_HEDGE := Vector2i(2, 9)
+const KINDRA_SIGN := Vector2i(1, 6)
+const KINDRA_BOULDER := Vector2i(11, 7)
+const KINDRA_TREE_LEFT := Vector2i(0, 7)
+const KINDRA_TREE_RIGHT := Vector2i(14, 7)
 
 @onready var ground_layer: TileMapLayer = $GroundLayer
 @onready var obstacle_layer: TileMapLayer = $ObstacleLayer
@@ -49,6 +56,37 @@ func _build_map() -> void:
 	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 14, 14, ground_layer, obstacle_layer)
 	obstacle_layer.set_cell(Vector2i(4, 14), src, MapTiles.ROCK)
 	obstacle_layer.set_cell(Vector2i(13, 6), src, MapTiles.STUMP)
+	_paint_zone_theme()
+
+
+func _paint_zone_theme() -> void:
+	for x in MAP_W:
+		for y in MAP_H:
+			var tile: Vector2i = KINDRA_GRASS_TILES[(x * 3 + y * 2) % KINDRA_GRASS_TILES.size()]
+			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_KINDRA_SCREEN, tile)
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+	for x in range(0, MAP_W - 2):
+		ground_layer.set_cell(Vector2i(x, 10), MapTiles.SRC_KINDRA_SCREEN, KINDRA_PATH)
+
+	var west_entrance := range(9, 12)
+	for x in MAP_W:
+		_set_kindra_obstacle(Vector2i(x, 0), KINDRA_HEDGE)
+		_set_kindra_obstacle(Vector2i(x, MAP_H - 1), KINDRA_HEDGE)
+	for y in MAP_H:
+		if not (y in west_entrance):
+			_set_kindra_obstacle(Vector2i(0, y), KINDRA_HEDGE)
+		_set_kindra_obstacle(Vector2i(MAP_W - 1, y), KINDRA_HEDGE)
+
+	for pos in [Vector2i(6, 4), Vector2i(14, 14)]:
+		_set_kindra_obstacle(pos, KINDRA_TREE_LEFT if pos.x < MAP_W / 2 else KINDRA_TREE_RIGHT)
+	_set_kindra_obstacle(Vector2i(4, 14), KINDRA_BOULDER)
+	_set_kindra_obstacle(Vector2i(13, 6), KINDRA_SIGN)
+
+
+func _set_kindra_obstacle(tile: Vector2i, atlas: Vector2i) -> void:
+	ground_layer.set_cell(tile, MapTiles.SRC_KINDRA_SCREEN, atlas)
+	obstacle_layer.set_cell(tile, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
 
 
 func _set_ground(x: int, y: int, tile: Vector2i) -> void:

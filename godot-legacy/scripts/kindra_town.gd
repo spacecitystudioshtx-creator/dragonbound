@@ -1,5 +1,5 @@
 ## Kindra — Starter town. Volcanic hot spring village.
-## Buildings: Player's Home, The Pyre (elder gives starter inside), Elder's House,
+## Buildings: Player's Home, The Pyre (elder gives starter), Elder's House,
 ## Supply Shop, NPC house. Hot spring pool in the southeast.
 ## Exits: East → Dustway Route 1, North → blocked until trial complete.
 
@@ -8,8 +8,21 @@ extends Node2D
 const TILE_SIZE := 16
 const MAP_W := 36
 const MAP_H := 30
-const EAST_EXIT_ROWS  := [14, 15, 16]   ## Row indices of east → Dustway opening
-const NORTH_EXIT_COLS := [17, 18, 19]   ## Col indices of north → The Scald opening
+const STARTER_SCREEN_ORIGIN := Vector2i(3, 15)
+const STARTER_SCREEN_SIZE := Vector2i(15, 10)
+const EAST_SCREEN_ORIGIN := Vector2i(21, 10)
+const SCREEN_SIZE := Vector2i(15, 10)
+
+const KINDRA_GRASS_TILES := [Vector2i(0, 3), Vector2i(5, 0), Vector2i(6, 1), Vector2i(9, 5), Vector2i(14, 5)]
+const KINDRA_PATH := Vector2i(1, 4)
+const KINDRA_PATH_DOT := Vector2i(7, 4)
+const KINDRA_VERTICAL_PATH := Vector2i(7, 1)
+const KINDRA_FENCE := Vector2i(2, 8)
+const KINDRA_HEDGE := Vector2i(2, 9)
+const KINDRA_SIGN := Vector2i(1, 6)
+const KINDRA_BOULDER := Vector2i(11, 7)
+const KINDRA_TREE_LEFT := Vector2i(0, 7)
+const KINDRA_TREE_RIGHT := Vector2i(14, 7)
 
 @onready var ground_layer: TileMapLayer = $GroundLayer
 @onready var obstacle_layer: TileMapLayer = $ObstacleLayer
@@ -21,9 +34,6 @@ func _ready() -> void:
 	ground_layer.tile_set = tileset
 	obstacle_layer.tile_set = tileset
 	_build_map()
-	_spawn_npcs()
-	_add_interactive_zones()
-	_add_perimeter_walls()
 	_setup_camera_bounds()
 
 	if not GameState.has_starter:
@@ -33,213 +43,285 @@ func _ready() -> void:
 func _build_map() -> void:
 	var src := MapTiles.SRC_GROUND
 
-	## ── Ground fill ─────────────────────────────────────────────────────────
+	## ── Ground fill (grass with occasional variation) ───────────────────
 	for x in MAP_W:
 		for y in MAP_H:
-			var gt: Vector2i = MapTiles.GRASS if (x + y * 3) % 7 != 0 else MapTiles.GRASS_ALT
+			## Sparse alt tile for subtle variation (1 in 19 ≈ 5%, was 1 in 7 — too busy)
+			var gt: Vector2i = MapTiles.GRASS if (x * 5 + y * 3) % 19 != 0 else MapTiles.GRASS_ALT
 			ground_layer.set_cell(Vector2i(x, y), src, gt)
 
-	## ── Border: tree-line around the map edge ───────────────────────────────────
-	## Collision is sealed by the invisible StaticBody2D perimeter wall added in
-	## _add_perimeter_walls(). Trees give the natural Pokémon forest-edge look.
-	## Skip any position that overlaps an exit gap.
-	var bx := 0
-	while bx < MAP_W - 1:        ## top border
-		if not (bx in NORTH_EXIT_COLS or (bx + 1) in NORTH_EXIT_COLS):
-			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, bx, 0, ground_layer, obstacle_layer)
-		bx += 2
-	bx = 0
-	while bx < MAP_W - 1:        ## bottom border
-		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, bx, MAP_H - 2, ground_layer, obstacle_layer)
-		bx += 2
-	var by := 0
-	while by < MAP_H - 1:        ## left border
-		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, by, ground_layer, obstacle_layer)
-		by += 2
-	by = 0
-	while by < MAP_H - 1:        ## right border (skip east exit rows)
-		if not (by in EAST_EXIT_ROWS or (by + 1) in EAST_EXIT_ROWS):
-			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, by, ground_layer, obstacle_layer)
-		by += 2
+	## ── Border: ring of big trees ────────────────────────────────────────
+	## East exit (to Dustway) at rows 14-16. North exit gap at cols 17-19.
+	var east_exit_rows := range(14, 17)
+	var north_exit_cols := range(17, 20)
+	## Top + bottom rows
+	for x in range(0, MAP_W, 2):
+		if not (x in north_exit_cols):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, 0, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, x, MAP_H - 2, ground_layer, obstacle_layer)
+	## Left + right columns
+	for y in range(0, MAP_H, 2):
+		if not (y in east_exit_rows):
+			MapTiles.stamp(MapTiles.PROP_TREE_SMALL, MAP_W - 2, y, ground_layer, obstacle_layer)
+		MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 0, y, ground_layer, obstacle_layer)
 
-	## North exit: sign blocks passage until trial complete
-	for xc in NORTH_EXIT_COLS:
-		obstacle_layer.set_cell(Vector2i(xc, 1), src, MapTiles.SIGN)
+	## North exit fence (blocked — trial not complete)
+	for x in north_exit_cols:
+		obstacle_layer.set_cell(Vector2i(x, 1), src, MapTiles.FENCE)
 
-	## ── Path network ─────────────────────────────────────────────────────────
-	for x in range(2, MAP_W):
-		_set_ground(x, 15, MapTiles.DIRT_PATH)
-	for y in range(2, MAP_H - 1):
-		_set_ground(18, y, MapTiles.DIRT_PATH)
-	for x in range(8, 19):
-		_set_ground(x, 23, MapTiles.DIRT_PATH)
-	for y in range(26, 29):
-		_set_ground(10, y, MapTiles.DIRT_PATH)  ## south approach to Player's Home door
-	for y in range(10, 16):
-		_set_ground(26, y, MapTiles.DIRT_PATH)
-	for y in range(5, 16):
+	## ── Path network ─────────────────────────────────────────────────────
+	## The starter view is a proper town screen: a broad pale road, buildings
+	## above it, fence/hedge texture below it, and a clear east exit.
+	for x in range(0, MAP_W):
+		for y in range(18, 23):
+			_set_ground(x, y, MapTiles.DIRT_PATH)
+	for y in range(2, 23):
+		for x in range(17, 20):
+			_set_ground(x, y, MapTiles.DIRT_PATH)
+	for x in range(4, 14):
+		for y in range(11, 18):
+			_set_ground(x, y, MapTiles.DIRT_PATH)
+	for x in range(22, 31):
+		for y in range(12, 18):
+			_set_ground(x, y, MapTiles.DIRT_PATH)
+	for x in range(8, 18):
+		_set_ground(x, 24, MapTiles.DIRT_PATH)
+	for y in range(23, 27):
+		_set_ground(10, y, MapTiles.DIRT_PATH)
+	for x in range(5, 18):
+		_set_ground(x, 6, MapTiles.DIRT_PATH)
+	for y in range(6, 18):
 		_set_ground(12, y, MapTiles.DIRT_PATH)
-	for x in range(18, 24):
+	for x in range(18, 22):
 		_set_ground(x, 8, MapTiles.DIRT_PATH)
-	## Path up to Pyre door
-	for y in range(9, 15):
-		_set_ground(21, y, MapTiles.DIRT_PATH)
 
-	## ── Buildings ────────────────────────────────────────────────────────────
-	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  9, 24, ground_layer, obstacle_layer)  ## Player's Home
-	MapTiles.stamp(MapTiles.PROP_HOUSE_BIG,   20,  3, ground_layer, obstacle_layer)  ## The Pyre
-	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  4,  4, ground_layer, obstacle_layer)  ## Elder's House
-	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL, 24, 10, ground_layer, obstacle_layer)  ## Supply Shop
-	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  3, 11, ground_layer, obstacle_layer)  ## NPC House
+	## ── Buildings — use village-atlas stamps ─────────────────────────────
+	## Player's Home (3×3 small house) — south-center
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  9, 24, ground_layer, obstacle_layer)
+	## Market-like hall and home visible from the starting road.
+	MapTiles.stamp(MapTiles.PROP_HOUSE_BIG,    3, 10, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL, 23, 13, ground_layer, obstacle_layer)
+	## The Pyre and elder house remain up the north road.
+	MapTiles.stamp(MapTiles.PROP_HOUSE_BIG,   20,  3, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_HOUSE_SMALL,  4,  4, ground_layer, obstacle_layer)
 
-	## ── Fix door tiles ───────────────────────────────────────────────────────
-	## Active doors: the atlas door tile sits on ground_layer (non-solid).
-	## Add DIRT_PATH one step south so the approach path is obvious.
-	_set_ground(21, 8,  MapTiles.DIRT_PATH)  ## The Pyre — south approach step
-	_set_ground(10, 27, MapTiles.DIRT_PATH)  ## Player's Home — south approach step
-	## Block locked building doors so the player can't enter empty buildings.
-	obstacle_layer.set_cell(Vector2i(5, 6),   src, MapTiles.FENCE)  ## Elder's House
-	obstacle_layer.set_cell(Vector2i(25, 12), src, MapTiles.FENCE)  ## Supply Shop
-	obstacle_layer.set_cell(Vector2i(4, 13),  src, MapTiles.FENCE)  ## NPC House
-
-	## ── Garden — tall grass for starter encounters ───────────────────────────
+	## ── Garden — tall grass patch where starters encounter ──────────────
+	## Covers the GardenEncounter Area2D in the scene.
 	for x in range(14, 18):
 		for y in range(24, 26):
 			_set_ground(x, y, MapTiles.TALL_GRASS)
+	## Flower decorations flanking the garden
 	_set_ground(13, 24, MapTiles.FLOWER)
 	_set_ground(13, 25, MapTiles.FLOWER)
 	_set_ground(18, 24, MapTiles.FLOWER)
 	_set_ground(18, 25, MapTiles.FLOWER)
 
-	## ── Hot spring pool (southeast) ──────────────────────────────────────────
-	## Water is purely visual on ground_layer; an invisible StaticBody2D blocks entry.
+	## ── Hot spring pool (southeast) ──────────────────────────────────────
 	for x in range(28, 33):
 		for y in range(25, 28):
 			_set_ground(x, y, MapTiles.WATER)
-	add_child(_make_static_box(
-		Vector2(28 * TILE_SIZE, 25 * TILE_SIZE),
-		Vector2(5 * TILE_SIZE,  3 * TILE_SIZE)))
+			obstacle_layer.set_cell(Vector2i(x, y), src, MapTiles.WATER)
+	## Fence around hot spring
+	for x in range(27, 34):
+		obstacle_layer.set_cell(Vector2i(x, 24), src, MapTiles.FENCE)
+	for y in range(24, 28):
+		obstacle_layer.set_cell(Vector2i(27, y), src, MapTiles.FENCE)
 
-	## ── Decorative trees ─────────────────────────────────────────────────────
-	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 28, 4,  ground_layer, obstacle_layer)
-	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 2,  24, ground_layer, obstacle_layer)
-	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 14, 6,  ground_layer, obstacle_layer)
+	## GBA-town foreground fence/hedge line under the main road.
+	for x in range(1, 17):
+		obstacle_layer.set_cell(Vector2i(x, 25), src, MapTiles.BUSH)
+	for x in range(17, 26):
+		obstacle_layer.set_cell(Vector2i(x, 25), src, MapTiles.FENCE)
+	for x in range(26, 35):
+		obstacle_layer.set_cell(Vector2i(x, 25), src, MapTiles.BUSH)
 
-	## ── Signs ────────────────────────────────────────────────────────────────
-	obstacle_layer.set_cell(Vector2i(19, 15), src, MapTiles.SIGN)  ## East → Dustway
-	obstacle_layer.set_cell(Vector2i(18,  2), src, MapTiles.SIGN)  ## North — Closed
+	## ── Decorative scatter: small trees near buildings ───────────────────
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 28, 4, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 2, 24, ground_layer, obstacle_layer)
+	MapTiles.stamp(MapTiles.PROP_TREE_SMALL, 14, 6, ground_layer, obstacle_layer)
 
+	## Signs
+	obstacle_layer.set_cell(Vector2i(20, 17), src, MapTiles.SIGN)  ## "East → Dustway"
+	obstacle_layer.set_cell(Vector2i(18,  2), src, MapTiles.SIGN)  ## "North — Road Closed"
 
-func _spawn_npcs() -> void:
-	## Elder Moss has moved INSIDE The Pyre — approach the door to enter.
-	NPCSpawner.spawn(self, 7,  22, Vector2.RIGHT, "kindra", "neighbor_fen")
-	NPCSpawner.spawn(self, 25, 14, Vector2.DOWN,  "kindra", "shopkeeper")
-	NPCSpawner.spawn(self, 33, 15, Vector2.LEFT,  "kindra", "rival_sable")
-
-
-func _add_interactive_zones() -> void:
-	## ── Door zones: walk onto step tile → enter building ─────────────────────
-	_add_door_zone(21, 8,
-		"res://scenes/maps/pyre_interior.tscn",
-		Vector2(88, 120))   ## spawn inside Pyre at tile (5,7)
-
-	_add_door_zone(10, 26,
-		"res://scenes/maps/player_home.tscn",
-		Vector2(72, 104))   ## spawn inside Home at tile (4,6)
-
-	## ── Sign read zones: press A facing sign ─────────────────────────────────
-	_add_sign_zone(19, 15, "kindra", "sign_east")
-	_add_sign_zone(18,  2, "kindra", "sign_north")
-
-	## ── Locked door prompts: press A facing a locked door ────────────────────
-	_add_sign_zone(5,  7,  "kindra", "door_locked")  ## Elder's House (1 south of blocked door)
-	_add_sign_zone(25, 13, "kindra", "door_locked")  ## Supply Shop
-	_add_sign_zone(4,  14, "kindra", "door_locked")  ## NPC House
+	_stamp_full_map(MapTiles.SRC_KINDRA_FULL, Vector2i(MAP_W, MAP_H))
+	_build_full_map_collision()
 
 
-func _add_door_zone(tile_x: int, tile_y: int, target: String, spawn: Vector2) -> void:
-	var area := Area2D.new()
-	area.position = Vector2(tile_x * TILE_SIZE + TILE_SIZE / 2,
-							tile_y * TILE_SIZE + TILE_SIZE / 2)
-	area.collision_layer = 4
-	area.collision_mask  = 1
-	var cshape := CollisionShape2D.new()
-	var rect   := RectangleShape2D.new()
-	rect.size  = Vector2(TILE_SIZE - 4, TILE_SIZE - 4)
-	cshape.shape = rect
-	area.add_child(cshape)
-	area.body_entered.connect(func(body: Node2D):
-		if body.is_in_group("player"):
-			SceneTransition.change_scene(target, spawn)
-	)
-	add_child(area)
+func _paint_full_kindra_theme() -> void:
+	for x in MAP_W:
+		for y in MAP_H:
+			var tile: Vector2i = KINDRA_GRASS_TILES[(x * 3 + y * 5) % KINDRA_GRASS_TILES.size()]
+			_set_kindra_ground(Vector2i(x, y), tile)
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+	## Broad town roads, using the same pale path tiles as the generated screen.
+	for x in range(0, MAP_W):
+		for y in range(18, 23):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_PATH if (x + y) % 5 != 0 else KINDRA_PATH_DOT)
+	for y in range(1, 23):
+		for x in range(16, 19):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_VERTICAL_PATH if x == 17 else KINDRA_PATH)
+	for y in range(7, 18):
+		for x in range(8, 13):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_PATH)
+	for y in range(8, 18):
+		for x in range(23, 29):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_PATH)
+	for y in range(23, 27):
+		for x in range(8, 13):
+			_set_kindra_ground(Vector2i(x, y), KINDRA_PATH)
+
+	## Buildings are copied from the generated town source, so the rest of
+	## Kindra no longer falls back to the older placeholder building style.
+	_stamp_kindra_rect(Vector2i(1, 0), Vector2i(4, 4), Vector2i(2, 9), true)
+	_stamp_kindra_rect(Vector2i(10, 0), Vector2i(4, 4), Vector2i(23, 9), true)
+	_stamp_kindra_rect(Vector2i(10, 0), Vector2i(4, 4), Vector2i(5, 3), true)
+	_stamp_kindra_rect(Vector2i(1, 0), Vector2i(4, 4), Vector2i(20, 2), true)
+	_stamp_kindra_rect(Vector2i(10, 0), Vector2i(4, 4), Vector2i(8, 24), true)
+
+	for door in [Vector2i(4, 12), Vector2i(25, 12), Vector2i(7, 6), Vector2i(22, 5), Vector2i(10, 27)]:
+		obstacle_layer.erase_cell(door)
+
+	## Fences, hedges, trees, signs, and rocks from the same generated atlas.
+	for x in range(1, 16):
+		_set_kindra_obstacle(Vector2i(x, 25), KINDRA_HEDGE)
+	for x in range(16, 29):
+		_set_kindra_obstacle(Vector2i(x, 25), KINDRA_FENCE)
+	for x in range(29, 35):
+		_set_kindra_obstacle(Vector2i(x, 25), KINDRA_HEDGE)
+	for x in range(0, MAP_W):
+		if x < 15 or x > 19:
+			_set_kindra_obstacle(Vector2i(x, 0), KINDRA_HEDGE)
+			_set_kindra_obstacle(Vector2i(x, MAP_H - 1), KINDRA_HEDGE)
+	for y in range(0, MAP_H):
+		if y < 17 or y > 22:
+			_set_kindra_obstacle(Vector2i(0, y), KINDRA_HEDGE)
+		if y < 18 or y > 22:
+			_set_kindra_obstacle(Vector2i(MAP_W - 1, y), KINDRA_HEDGE)
+
+	for pos in [Vector2i(1, 14), Vector2i(34, 8), Vector2i(34, 14), Vector2i(1, 26), Vector2i(32, 24)]:
+		_set_kindra_obstacle(pos, KINDRA_TREE_LEFT if pos.x < MAP_W / 2 else KINDRA_TREE_RIGHT)
+	for pos in [Vector2i(14, 17), Vector2i(20, 17), Vector2i(11, 6), Vector2i(17, 2)]:
+		_set_kindra_obstacle(pos, KINDRA_SIGN)
+	for pos in [Vector2i(28, 16), Vector2i(13, 24), Vector2i(18, 24)]:
+		_set_kindra_obstacle(pos, KINDRA_BOULDER)
 
 
-func _add_sign_zone(tile_x: int, tile_y: int, df: String, nid: String) -> void:
-	var area := Area2D.new()
-	area.position = Vector2(tile_x * TILE_SIZE + TILE_SIZE / 2,
-							tile_y * TILE_SIZE + TILE_SIZE / 2)
-	area.add_to_group("interactable")
-	area.set_meta("dialog_file", df)
-	area.set_meta("node_id",     nid)
-	var cshape := CollisionShape2D.new()
-	var shape  := CircleShape2D.new()
-	shape.radius = float(TILE_SIZE) * 0.55
-	cshape.shape = shape
-	area.add_child(cshape)
-	add_child(area)
+func _stamp_generated_starter_screen() -> void:
+	## This is the first production use of the ComfyUI background pipeline:
+	## the generated 240x160 benchmark is sliced into 16x16 tiles and placed
+	## into the playable map. Collision remains deterministic and invisible.
+	for lx in STARTER_SCREEN_SIZE.x:
+		for ly in STARTER_SCREEN_SIZE.y:
+			var pos := STARTER_SCREEN_ORIGIN + Vector2i(lx, ly)
+			ground_layer.set_cell(pos, MapTiles.SRC_KINDRA_SCREEN, Vector2i(lx, ly))
+			obstacle_layer.erase_cell(pos)
+
+	for lx in [0, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14]:
+		for ly in range(0, 4):
+			_set_collision(STARTER_SCREEN_ORIGIN + Vector2i(lx, ly))
+	for lx in range(0, 5):
+		_set_collision(STARTER_SCREEN_ORIGIN + Vector2i(lx, 7))
+	for lx in range(9, 15):
+		_set_collision(STARTER_SCREEN_ORIGIN + Vector2i(lx, 7))
+	for lx in range(0, 15):
+		_set_collision(STARTER_SCREEN_ORIGIN + Vector2i(lx, 9))
+
+	## Keep visible doors walkable/enterable.
+	for local_door in [Vector2i(2, 3), Vector2i(13, 3)]:
+		obstacle_layer.erase_cell(STARTER_SCREEN_ORIGIN + local_door)
+
+
+func _stamp_generated_screen(source_id: int, origin: Vector2i) -> void:
+	for lx in SCREEN_SIZE.x:
+		for ly in SCREEN_SIZE.y:
+			var pos := origin + Vector2i(lx, ly)
+			ground_layer.set_cell(pos, source_id, Vector2i(lx, ly))
+			obstacle_layer.erase_cell(pos)
+
+
+func _clear_east_exit() -> void:
+	for x in [34, 35]:
+		for y in range(14, 17):
+			obstacle_layer.erase_cell(Vector2i(x, y))
+			ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_KINDRA_SCREEN, KINDRA_PATH)
+
+
+func _stamp_full_map(source_id: int, size_tiles: Vector2i) -> void:
+	for x in size_tiles.x:
+		for y in size_tiles.y:
+			ground_layer.set_cell(Vector2i(x, y), source_id, Vector2i(x, y))
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+
+func _build_full_map_collision() -> void:
+	for x in MAP_W:
+		_set_collision(Vector2i(x, 0))
+		_set_collision(Vector2i(x, MAP_H - 1))
+	for y in MAP_H:
+		_set_collision(Vector2i(0, y))
+		if y < 14 or y > 16:
+			_set_collision(Vector2i(MAP_W - 1, y))
+
+	## Buildings visible in the generated full map.
+	for pos in [
+		Vector2i(4, 4), Vector2i(5, 4), Vector2i(6, 4), Vector2i(7, 4), Vector2i(8, 4),
+		Vector2i(4, 5), Vector2i(5, 5), Vector2i(6, 5), Vector2i(7, 5), Vector2i(8, 5),
+		Vector2i(20, 4), Vector2i(21, 4), Vector2i(22, 4), Vector2i(23, 4), Vector2i(24, 4), Vector2i(25, 4), Vector2i(26, 4),
+		Vector2i(20, 5), Vector2i(21, 5), Vector2i(22, 5), Vector2i(23, 5), Vector2i(24, 5), Vector2i(25, 5), Vector2i(26, 5),
+		Vector2i(3, 15), Vector2i(4, 15), Vector2i(5, 15), Vector2i(6, 15),
+		Vector2i(3, 16), Vector2i(4, 16), Vector2i(6, 16),
+		Vector2i(22, 15), Vector2i(23, 15), Vector2i(24, 15), Vector2i(25, 15), Vector2i(26, 15),
+		Vector2i(22, 16), Vector2i(23, 16), Vector2i(25, 16), Vector2i(26, 16),
+		Vector2i(8, 27), Vector2i(9, 27), Vector2i(10, 27), Vector2i(11, 27), Vector2i(12, 27),
+		Vector2i(8, 28), Vector2i(9, 28), Vector2i(11, 28), Vector2i(12, 28),
+	]:
+		_set_collision(pos)
+
+	## Foreground fence/hedge barriers.
+	for x in range(2, 15):
+		_set_collision(Vector2i(x, 23))
+		_set_collision(Vector2i(x, 24))
+	for x in range(22, 34):
+		_set_collision(Vector2i(x, 23))
+		_set_collision(Vector2i(x, 24))
+
+	for pos in [Vector2i(13, 17), Vector2i(16, 17), Vector2i(9, 18), Vector2i(24, 16), Vector2i(19, 24)]:
+		_set_collision(pos)
+
+	## Doors and east exit must stay walkable.
+	for pos in [Vector2i(7, 7), Vector2i(24, 7), Vector2i(7, 17), Vector2i(24, 17), Vector2i(10, 29)]:
+		obstacle_layer.erase_cell(pos)
+	for x in [34, 35]:
+		for y in range(14, 17):
+			obstacle_layer.erase_cell(Vector2i(x, y))
+
+
+func _set_kindra_ground(tile: Vector2i, atlas: Vector2i) -> void:
+	ground_layer.set_cell(tile, MapTiles.SRC_KINDRA_SCREEN, atlas)
+
+
+func _set_kindra_obstacle(tile: Vector2i, atlas: Vector2i) -> void:
+	ground_layer.set_cell(tile, MapTiles.SRC_KINDRA_SCREEN, atlas)
+	obstacle_layer.set_cell(tile, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
+
+
+func _stamp_kindra_rect(source: Vector2i, size: Vector2i, dest: Vector2i, solid: bool) -> void:
+	for lx in size.x:
+		for ly in size.y:
+			var pos := dest + Vector2i(lx, ly)
+			ground_layer.set_cell(pos, MapTiles.SRC_KINDRA_SCREEN, source + Vector2i(lx, ly))
+			if solid:
+				obstacle_layer.set_cell(pos, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
+
+
+func _set_collision(tile: Vector2i) -> void:
+	obstacle_layer.set_cell(tile, MapTiles.SRC_COLLISION, MapTiles.COLLISION)
 
 
 func _set_ground(x: int, y: int, tile: Vector2i) -> void:
 	ground_layer.set_cell(Vector2i(x, y), MapTiles.SRC_GROUND, tile)
-
-
-## Invisible physics blocker for water bodies — no tiles on obstacle_layer so
-## nothing renders visually.
-func _make_static_box(top_left: Vector2, size: Vector2) -> StaticBody2D:
-	var body := StaticBody2D.new()
-	body.collision_layer = 2
-	body.collision_mask  = 0
-	var cs   := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size    = size
-	cs.position  = top_left + size * 0.5
-	cs.shape     = rect
-	body.add_child(cs)
-	return body
-
-
-## Invisible StaticBody2D wall around the entire map, leaving only the intended exits open.
-## This seals trunk-base gaps in border trees so the player can never walk off-screen.
-func _add_perimeter_walls() -> void:
-	var wall := StaticBody2D.new()
-	wall.collision_layer = 2
-	wall.collision_mask  = 0
-	var W  := float(MAP_W * TILE_SIZE)
-	var H  := float(MAP_H * TILE_SIZE)
-	var T  := float(TILE_SIZE)
-	var nx0 := float(NORTH_EXIT_COLS[0])      * T
-	var nx1 := float(NORTH_EXIT_COLS[-1] + 1) * T
-	var ey0 := float(EAST_EXIT_ROWS[0])       * T
-	var ey1 := float(EAST_EXIT_ROWS[-1] + 1)  * T
-	_wall_seg(wall, 0.0,     0.0,     nx0,     T)         ## top-left of north gap
-	_wall_seg(wall, nx1,     0.0,     W - nx1, T)         ## top-right of north gap
-	_wall_seg(wall, 0.0,     H - T,   W,       T)         ## bottom
-	_wall_seg(wall, 0.0,     0.0,     T,       H)         ## left
-	_wall_seg(wall, W - T,   0.0,     T,       ey0)       ## right-top of east gap
-	_wall_seg(wall, W - T,   ey1,     T,       H - ey1)   ## right-bottom of east gap
-	add_child(wall)
-
-
-func _wall_seg(parent: StaticBody2D, x: float, y: float, w: float, h: float) -> void:
-	if w <= 0.0 or h <= 0.0:
-		return
-	var cs   := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size   = Vector2(w, h)
-	cs.position = Vector2(x + w * 0.5, y + h * 0.5)
-	cs.shape    = rect
-	parent.add_child(cs)
 
 
 func _setup_camera_bounds() -> void:
