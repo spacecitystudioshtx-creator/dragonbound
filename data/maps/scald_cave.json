@@ -1,15 +1,33 @@
 {
   "id": "scald_cave",
   "name": "THE SCALD",
+  "music": "scald",
   "legend": {
-    "C": { "tile": "cave_wall" },
-    "b": { "tile": "banner" },
-    ".": { "tile": "basalt" },
-    "L": { "tile": "lava" },
-    "g": { "tile": "cinder_grass", "encounter": true },
-    "r": { "tile": "rock_cave" },
-    "z": { "tile": "brazier_cave" },
-    "S": { "tile": "statue_cave" }
+    "C": {
+      "tile": "cave_wall"
+    },
+    "b": {
+      "tile": "banner"
+    },
+    ".": {
+      "tile": "basalt"
+    },
+    "L": {
+      "tile": "lava"
+    },
+    "g": {
+      "tile": "cinder_grass",
+      "encounter": true
+    },
+    "r": {
+      "tile": "rock_cave"
+    },
+    "z": {
+      "tile": "brazier_cave"
+    },
+    "S": {
+      "tile": "statue_cave"
+    }
   },
   "rows": [
     "CCCCCCCCCCCCCCCCCCCCCCCC",
@@ -30,21 +48,59 @@
     "CCCCCCCCCCC..CCCCCCCCCCC"
   ],
   "npcs": [
-    { "id": "ashen_acolyte", "x": 12, "y": 9, "sprite": "acolyte", "facing": "down", "dialog": "scald_cave.ashen" },
-    { "id": "warden_brask", "x": 11, "y": 3, "sprite": "brask", "facing": "down", "dialog": "scald_cave.brask" }
+    {
+      "id": "ashen_acolyte",
+      "x": 12,
+      "y": 9,
+      "sprite": "acolyte",
+      "facing": "down",
+      "dialog": "scald_cave.ashen"
+    },
+    {
+      "id": "warden_brask",
+      "x": 11,
+      "y": 3,
+      "sprite": "brask",
+      "facing": "down",
+      "dialog": "scald_cave.brask"
+    }
   ],
   "exits": [
-    { "x": 11, "y": 15, "to": "scald_gate", "spawn": "from_cave" },
-    { "x": 12, "y": 15, "to": "scald_gate", "spawn": "from_cave" }
+    {
+      "x": 11,
+      "y": 15,
+      "to": "scald_gate",
+      "spawn": "from_cave"
+    },
+    {
+      "x": 12,
+      "y": 15,
+      "to": "scald_gate",
+      "spawn": "from_cave"
+    }
   ],
   "spawns": {
-    "default": { "x": 11, "y": 14, "facing": "up" }
+    "default": {
+      "x": 11,
+      "y": 14,
+      "facing": "up"
+    }
   },
   "encounters": {
     "rate": 0.16,
     "table": [
-      { "drake": "flick", "min": 4, "max": 6, "weight": 80 },
-      { "drake": "ember", "min": 5, "max": 6, "weight": 20 }
+      {
+        "drake": "flick",
+        "min": 4,
+        "max": 6,
+        "weight": 80
+      },
+      {
+        "drake": "ember",
+        "min": 5,
+        "max": 6,
+        "weight": 20
+      }
     ]
   }
 }

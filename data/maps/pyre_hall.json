@@ -1,15 +1,32 @@
 {
   "id": "pyre_hall",
   "name": "THE PYRE HALL",
+  "music": "town",
   "legend": {
-    "t": { "tile": "iwall_top" },
-    "q": { "tile": "wall_stone" },
-    "B": { "tile": "banner" },
-    "G": { "tile": "floor_stone" },
-    "R": { "tile": "rug" },
-    "z": { "tile": "brazier_in" },
-    "S": { "tile": "statue" },
-    "M": { "tile": "mat" }
+    "t": {
+      "tile": "iwall_top"
+    },
+    "q": {
+      "tile": "wall_stone"
+    },
+    "B": {
+      "tile": "banner"
+    },
+    "G": {
+      "tile": "floor_stone"
+    },
+    "R": {
+      "tile": "rug"
+    },
+    "z": {
+      "tile": "brazier_in"
+    },
+    "S": {
+      "tile": "statue"
+    },
+    "M": {
+      "tile": "mat"
+    }
   },
   "rows": [
     "tttttttttttt",
@@ -23,12 +40,28 @@
     "tttttttttttt"
   ],
   "npcs": [
-    { "id": "elder_moss", "x": 5, "y": 3, "sprite": "elder", "facing": "down", "dialog": "kindra.elder_moss" }
+    {
+      "id": "elder_moss",
+      "x": 5,
+      "y": 3,
+      "sprite": "elder",
+      "facing": "down",
+      "dialog": "kindra.elder_moss"
+    }
   ],
   "exits": [
-    { "x": 5, "y": 7, "to": "kindra_town", "spawn": "from_pyre" }
+    {
+      "x": 5,
+      "y": 7,
+      "to": "kindra_town",
+      "spawn": "from_pyre"
+    }
   ],
   "spawns": {
-    "default": { "x": 5, "y": 6, "facing": "up" }
+    "default": {
+      "x": 5,
+      "y": 6,
+      "facing": "up"
+    }
   }
 }

@@ -27,6 +27,17 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, WorldScene, BattleScene, DebugScene],
 });
 
+// Audio needs a real user gesture: init on first key/pointer, M toggles mute.
+import('./audio/sound').then(({ Sound }) => {
+  (window as any).__sound = Sound;
+  const init = () => Sound.init();
+  window.addEventListener('keydown', init);
+  window.addEventListener('pointerdown', init);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'm' || e.key === 'M') Sound.toggleMute();
+  });
+});
+
 // ── Automated playtest harness ────────────────────────────────────────────
 // The AI dev pipeline drives the game headlessly: synthetic key events plus
 // manual loop pumping (RAF stalls when the preview tab is hidden).

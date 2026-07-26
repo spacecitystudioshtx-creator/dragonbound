@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { VP_W, VP_H } from '../main';
+import { Sound } from '../audio/sound';
 
 const BOX_H = 44;
 const PAD = 7;
@@ -115,6 +116,7 @@ export class Textbox {
     return new Promise((resolve) => {
       const h = (e: KeyboardEvent) => {
         if (isA(e)) {
+          Sound.sfx('blip');
           this.scene.input.keyboard!.off('keydown', h);
           resolve();
         }
@@ -145,9 +147,9 @@ export class Textbox {
 
       let sel = 0;
       const keyHandler = (e: KeyboardEvent) => {
-        if (e.key === 'ArrowUp' || e.key === 'w') sel = (sel + options.length - 1) % options.length;
-        else if (e.key === 'ArrowDown' || e.key === 's') sel = (sel + 1) % options.length;
-        else if (isA(e)) return finish(sel);
+        if (e.key === 'ArrowUp' || e.key === 'w') { sel = (sel + options.length - 1) % options.length; Sound.sfx('tick'); }
+        else if (e.key === 'ArrowDown' || e.key === 's') { sel = (sel + 1) % options.length; Sound.sfx('tick'); }
+        else if (isA(e)) { Sound.sfx('blip'); return finish(sel); }
         else if (isB(e) && allowCancel) return finish(-1);
         cursor.setY(8 + sel * 14);
       };

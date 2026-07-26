@@ -6,6 +6,7 @@ import { DrakeInstance } from '../core/drake';
 import { Textbox, isA } from '../ui/Textbox';
 import type { MapDef, LegendEntry, DialogLine } from '../core/types';
 import { VP_W, VP_H } from '../main';
+import { Sound } from '../audio/sound';
 
 const TILE = 16;
 const STEP_MS = 170;
@@ -45,6 +46,7 @@ export class WorldScene extends Phaser.Scene {
   private moving = false;
   private uiLocked = false;
   private suppressBump = false;
+  private lastBumpSfx = 0;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private mapNameText?: Phaser.GameObjects.Container;
 
@@ -91,6 +93,7 @@ export class WorldScene extends Phaser.Scene {
 
     this.events.on('wake', (_sys: any, wakeData: any) => this.onBattleReturn(wakeData));
     this.showMapName();
+    Sound.playMusic(this.map.music ?? 'town');
     GameState.save();
   }
 
@@ -212,6 +215,14 @@ export class WorldScene extends Phaser.Scene {
 
     if (nx < 0 || ny < 0 || nx >= this.mapW || ny >= this.mapH || this.grid[ny][nx].solid) {
       this.setPlayerIdle(dir);
+      // Wall-thud only for plain walls; interactables make their own noise.
+      const cell = this.grid[ny]?.[nx];
+      const interactable = cell && (cell.dialog || cell.enter ||
+        (this.map.npcs ?? []).some((n) => n.x === nx && n.y === ny && this.npcSprites.has(n.id)));
+      if (!interactable && this.time.now - this.lastBumpSfx > 350) {
+        Sound.sfx('bump');
+        this.lastBumpSfx = this.time.now;
+      }
       this.onBump(nx, ny);
       return;
     }
@@ -283,6 +294,7 @@ export class WorldScene extends Phaser.Scene {
       return;
     }
     this.uiLocked = true;
+    Sound.sfx('door');
     const img = cell.doorImg;
     img?.setFrame(frameOf('door_half'));
     this.time.delayedCall(110, () => img?.setFrame(frameOf('door_open')));
@@ -338,6 +350,7 @@ export class WorldScene extends Phaser.Scene {
         GameState.setFlag(line.set_flag);
       } else if ('heal_party' in line) {
         GameState.healParty();
+        Sound.sfx('heal');
         await this.textbox.show('Your drakes were fully healed!');
       } else if ('give_starter' in line) {
         await this.pickStarter();
@@ -370,6 +383,7 @@ export class WorldScene extends Phaser.Scene {
         GameState.party.push(new DrakeInstance(chosen, 5));
         GameState.runestones += 5;
         GameState.setFlag('starter_given');
+        Sound.sfx('catch');
         await this.textbox.show(`You received ${DRAKES[chosen].name.toUpperCase()}!`);
         await this.textbox.show('You also received 5 RUNESTONES. Throw one in battle to bind a wild drake!');
         GameState.save();
@@ -448,11 +462,41 @@ export class WorldScene extends Phaser.Scene {
 
   // ── Battles ───────────────────────────────────────────────────────────────
 
+  /**
+   * FireRed-style encounter cutscene: sting + double white flash, then a
+   * cascade of black tiles sweeps the screen before the battle fades in.
+   */
   private startBattle(payload: any): void {
     payload.biome = this.map.id.startsWith('scald') ? 'volcanic' : 'field';
     this.uiLocked = true;
-    this.cameras.main.flash(150, 255, 255, 255);
-    this.time.delayedCall(250, () => {
+    Sound.stopMusic();
+    Sound.sfx('encounter');
+
+    const cam = this.cameras.main;
+    cam.flash(110, 255, 255, 255);
+    this.time.delayedCall(160, () => cam.flash(110, 255, 255, 255));
+
+    const COLS = 10, ROWS = 7;
+    const tw = VP_W / COLS, th = Math.ceil(VP_H / ROWS);
+    this.time.delayedCall(320, () => {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const rect = this.add
+            .rectangle(c * tw + tw / 2, r * th + th / 2, tw + 1, th + 1, 0x000000)
+            .setScale(0).setScrollFactor(0).setDepth(3000);
+          this.tweens.add({
+            targets: rect,
+            scale: 1,
+            delay: (c + r) * 26,
+            duration: 130,
+            ease: 'Quad.easeIn',
+          });
+        }
+      }
+    });
+
+    // flashes (320) + last tile delay (15*26=390) + tween (130) + a beat
+    this.time.delayedCall(950, () => {
       this.scene.run('Battle', payload);
       this.scene.sleep();
     });
@@ -469,6 +513,7 @@ export class WorldScene extends Phaser.Scene {
     this.suppressBump = true;
     this.setPlayerIdle(GameState.facing);
     this.cameras.main.fadeIn(250, 0, 0, 0);
+    Sound.playMusic(this.map.music ?? 'town');
     GameState.save();
 
     if (data?.trainerId) {

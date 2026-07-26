@@ -5,6 +5,7 @@ import { DrakeInstance } from '../core/drake';
 import { MOVES, DRAKES, TRAINERS } from '../core/db';
 import { executeMove, pickAiMove, tryCapture, xpReward } from '../core/battle';
 import { Textbox } from '../ui/Textbox';
+import { Sound } from '../audio/sound';
 
 const FONT = { fontFamily: '"Press Start 2P"', fontSize: '7px', color: '#383030', resolution: 3 };
 
@@ -63,6 +64,8 @@ export class BattleScene extends Phaser.Scene {
 
     this.drawField();
     this.textbox = new Textbox(this);
+    this.cameras.main.fadeIn(200, 0, 0, 0);
+    Sound.playMusic('battle');
     this.runBattle();
   }
 
@@ -143,6 +146,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private faintDrop(img: Phaser.GameObjects.Image): Promise<void> {
+    Sound.sfx('faint');
     return new Promise((resolve) => {
       this.tweens.add({
         targets: img, y: img.y + 26, alpha: 0, duration: 340, ease: 'Quad.easeIn',
@@ -189,6 +193,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async flashSprite(img: Phaser.GameObjects.Image): Promise<void> {
+    Sound.sfx('hit');
     return new Promise((resolve) => {
       this.tweens.add({ targets: img, alpha: 0.15, duration: 70, yoyo: true, repeat: 2, onComplete: () => resolve() });
     });
@@ -213,6 +218,7 @@ export class BattleScene extends Phaser.Scene {
           await this.textbox.show(`You can't run from a trainer battle!`);
           continue;
         }
+        Sound.sfx('run');
         await this.textbox.show('Got away safely!');
         return this.end('ran');
       }
@@ -295,10 +301,12 @@ export class BattleScene extends Phaser.Scene {
     await this.textbox.show(`${this.player.name} gained ${xp} XP!`);
     for (const msg of this.player.gainXp(xp)) {
       this.redrawHud();
+      Sound.sfx('levelup');
       await this.textbox.show(msg);
     }
     const evo = this.player.tryEvolve();
     if (evo) {
+      Sound.sfx('evolve');
       await this.textbox.show(evo);
       this.playerImg.setTexture(`drake_${this.player.speciesId}`);
       this.redrawHud();
@@ -315,6 +323,8 @@ export class BattleScene extends Phaser.Scene {
       await this.textbox.show(`${TRAINERS[this.payload.trainerId!].name.toUpperCase()} sent out ${this.enemy.name.toUpperCase()}!`);
       return false;
     }
+    Sound.stopMusic();
+    Sound.sfx('victory');
     if (this.payload.kind === 'trainer') {
       await this.textbox.show(`You defeated ${TRAINERS[this.payload.trainerId!].name.toUpperCase()}!`);
       this.end('trainer_win');
@@ -363,6 +373,8 @@ export class BattleScene extends Phaser.Scene {
     }
     if (success) {
       this.enemy.nickname = null; // drop the "Foe" battle label
+      Sound.stopMusic();
+      Sound.sfx('catch');
       await this.textbox.show(`Gotcha! ${this.enemy.name.toUpperCase()} was bound!`);
       GameState.party.push(this.enemy);
       this.end('caught');

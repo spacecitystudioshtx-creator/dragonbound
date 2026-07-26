@@ -1,20 +1,47 @@
 {
   "id": "player_home",
   "name": "YOUR HOME",
+  "music": "town",
   "legend": {
-    "t": { "tile": "iwall_top" },
-    "i": { "tile": "iwall" },
-    "P": { "tile": "painting" },
-    "V": { "tile": "window_int" },
-    "K": { "tile": "stove" },
-    "N": { "tile": "sink" },
-    "F": { "tile": "floor_wood" },
-    "M": { "tile": "mat" },
-    "B": { "tile": "bed" },
-    "A": { "tile": "table" },
-    "u": { "tile": "stool" },
-    "b": { "tile": "bookshelf" },
-    "L": { "tile": "plant" }
+    "t": {
+      "tile": "iwall_top"
+    },
+    "i": {
+      "tile": "iwall"
+    },
+    "P": {
+      "tile": "painting"
+    },
+    "V": {
+      "tile": "window_int"
+    },
+    "K": {
+      "tile": "stove"
+    },
+    "N": {
+      "tile": "sink"
+    },
+    "F": {
+      "tile": "floor_wood"
+    },
+    "M": {
+      "tile": "mat"
+    },
+    "B": {
+      "tile": "bed"
+    },
+    "A": {
+      "tile": "table"
+    },
+    "u": {
+      "tile": "stool"
+    },
+    "b": {
+      "tile": "bookshelf"
+    },
+    "L": {
+      "tile": "plant"
+    }
   },
   "rows": [
     "tttttttttt",
@@ -27,12 +54,28 @@
     "tttttttttt"
   ],
   "npcs": [
-    { "id": "ma", "x": 2, "y": 5, "sprite": "ma", "facing": "down", "dialog": "kindra.ma" }
+    {
+      "id": "ma",
+      "x": 2,
+      "y": 5,
+      "sprite": "ma",
+      "facing": "down",
+      "dialog": "kindra.ma"
+    }
   ],
   "exits": [
-    { "x": 5, "y": 6, "to": "kindra_town", "spawn": "from_home" }
+    {
+      "x": 5,
+      "y": 6,
+      "to": "kindra_town",
+      "spawn": "from_home"
+    }
   ],
   "spawns": {
-    "default": { "x": 5, "y": 5, "facing": "up" }
+    "default": {
+      "x": 5,
+      "y": 5,
+      "facing": "up"
+    }
   }
 }

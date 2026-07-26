@@ -13,7 +13,9 @@ A Pokémon FireRed-style 2D pixel art creature collector RPG that runs in any we
 npm install
 npm run dev      # → http://localhost:5173
 ```
-Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (cancel). Walking into NPCs/signs/doors interacts automatically. `npm run typecheck` for TS, `python3 tools/validate_data.py` for content.
+Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (cancel), M = mute. Walking into NPCs/signs/doors interacts automatically. `npm run typecheck` for TS, `python3 tools/validate_data.py` for content.
+
+**Audio** is fully synthesized at runtime (Web Audio square/triangle/noise — the GBA palette, zero asset files): five looping themes (title/town/route/battle/Scald) live as note data in `src/audio/tracks.ts`, each map picks its theme via a `music` field, and ~14 SFX cover text blips, bumps, doors, hits, faints, level-ups, evolution, catches, heals, and the victory fanfare. Wild encounters play the full FireRed cutscene: sting + double white flash + cascading tile wipe to black + battle theme as the drakes slide in.
 
 ### Balance snapshot (tuned this pass, keep an eye on it)
 - Damage: `(level+2) * power/50 * atk/def * typeChart^0.7 * STAB 1.2 * 2.4` — softened type swings, levels dominate.
@@ -24,7 +26,7 @@ Controls: arrows/WASD to move, Z/Space/Enter = A (interact/confirm), X/Esc = B (
 1. **Content wave** — `/generate-drake` + `/generate-zone` toward the 30-drake / 3-zone MVP. Zones, interiors, gated doors, trainers, and bosses are all pure JSON now — zero engine code.
 2. **Bench synergy combos** — data exists in `data/synergies.json`; battle UI hook not built yet. This is the flagship differentiator.
 3. **Party/Codex menu** — view drakes outside battle, reorder party, move management.
-4. **Audio** — chiptune loops (Web Audio, no assets yet).
+4. **Trader NPCs** — trade drakes with NPCs (dialog schema extension: `{trade: {want, give}}`); first one belongs in Kindra.
 5. **Mobile controls** — touch D-pad + A/B overlay.
 6. **North gate** — Kindra's north exit is signposted and closed; zone 2 goes there.
 7. **Deploy** — `npm run build` is a static site; host anywhere (GitHub Pages / itch.io / Cloudflare).

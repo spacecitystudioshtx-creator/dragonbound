@@ -10,6 +10,8 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     this.cameras.main.setBackgroundColor('#182838');
+    // Plays immediately if audio is unlocked; otherwise queued for init.
+    import('../audio/sound').then(({ Sound }) => Sound.playMusic('title'));
 
     // Ember glow horizon
     const g = this.add.graphics();

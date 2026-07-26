@@ -1,18 +1,41 @@
 {
   "id": "fen_home",
   "name": "FEN'S HOUSE",
+  "music": "town",
   "legend": {
-    "t": { "tile": "iwall_top" },
-    "i": { "tile": "iwall" },
-    "P": { "tile": "painting" },
-    "V": { "tile": "window_int" },
-    "F": { "tile": "floor_wood" },
-    "M": { "tile": "mat" },
-    "B": { "tile": "bed" },
-    "A": { "tile": "table" },
-    "u": { "tile": "stool" },
-    "b": { "tile": "bookshelf" },
-    "L": { "tile": "plant" }
+    "t": {
+      "tile": "iwall_top"
+    },
+    "i": {
+      "tile": "iwall"
+    },
+    "P": {
+      "tile": "painting"
+    },
+    "V": {
+      "tile": "window_int"
+    },
+    "F": {
+      "tile": "floor_wood"
+    },
+    "M": {
+      "tile": "mat"
+    },
+    "B": {
+      "tile": "bed"
+    },
+    "A": {
+      "tile": "table"
+    },
+    "u": {
+      "tile": "stool"
+    },
+    "b": {
+      "tile": "bookshelf"
+    },
+    "L": {
+      "tile": "plant"
+    }
   },
   "rows": [
     "ttttttttt",
@@ -24,12 +47,28 @@
     "ttttttttt"
   ],
   "npcs": [
-    { "id": "fen_pet", "x": 6, "y": 3, "sprite": "pet", "facing": "down", "dialog": "kindra.fen_pet" }
+    {
+      "id": "fen_pet",
+      "x": 6,
+      "y": 3,
+      "sprite": "pet",
+      "facing": "down",
+      "dialog": "kindra.fen_pet"
+    }
   ],
   "exits": [
-    { "x": 4, "y": 5, "to": "kindra_town", "spawn": "from_fen" }
+    {
+      "x": 4,
+      "y": 5,
+      "to": "kindra_town",
+      "spawn": "from_fen"
+    }
   ],
   "spawns": {
-    "default": { "x": 4, "y": 4, "facing": "up" }
+    "default": {
+      "x": 4,
+      "y": 4,
+      "facing": "up"
+    }
   }
 }

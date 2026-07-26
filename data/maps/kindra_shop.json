@@ -1,18 +1,41 @@
 {
   "id": "kindra_shop",
   "name": "KINDRA SUPPLY",
+  "music": "town",
   "legend": {
-    "t": { "tile": "iwall_top" },
-    "i": { "tile": "iwall" },
-    "S": { "tile": "shelf" },
-    "P": { "tile": "painting" },
-    "V": { "tile": "window_int" },
-    "F": { "tile": "floor_wood" },
-    "c": { "tile": "counter" },
-    "b": { "tile": "barrel" },
-    "k": { "tile": "crate" },
-    "L": { "tile": "plant" },
-    "M": { "tile": "mat" }
+    "t": {
+      "tile": "iwall_top"
+    },
+    "i": {
+      "tile": "iwall"
+    },
+    "S": {
+      "tile": "shelf"
+    },
+    "P": {
+      "tile": "painting"
+    },
+    "V": {
+      "tile": "window_int"
+    },
+    "F": {
+      "tile": "floor_wood"
+    },
+    "c": {
+      "tile": "counter"
+    },
+    "b": {
+      "tile": "barrel"
+    },
+    "k": {
+      "tile": "crate"
+    },
+    "L": {
+      "tile": "plant"
+    },
+    "M": {
+      "tile": "mat"
+    }
   },
   "rows": [
     "tttttttttt",
@@ -24,12 +47,28 @@
     "tttttttttt"
   ],
   "npcs": [
-    { "id": "shopkeeper", "x": 7, "y": 3, "sprite": "shopkeeper", "facing": "left", "dialog": "kindra.shopkeeper" }
+    {
+      "id": "shopkeeper",
+      "x": 7,
+      "y": 3,
+      "sprite": "shopkeeper",
+      "facing": "left",
+      "dialog": "kindra.shopkeeper"
+    }
   ],
   "exits": [
-    { "x": 4, "y": 5, "to": "kindra_town", "spawn": "from_shop" }
+    {
+      "x": 4,
+      "y": 5,
+      "to": "kindra_town",
+      "spawn": "from_shop"
+    }
   ],
   "spawns": {
-    "default": { "x": 4, "y": 4, "facing": "up" }
+    "default": {
+      "x": 4,
+      "y": 4,
+      "facing": "up"
+    }
   }
 }

@@ -1,14 +1,31 @@
 {
   "id": "dustway_route",
   "name": "DUSTWAY ROUTE 1",
+  "music": "route",
   "legend": {
-    "T": { "tile": "tree" },
-    ".": { "tile": "grass" },
-    ",": { "tile": "meadow" },
-    "t": { "tile": "tall_grass", "encounter": true },
-    "p": { "tile": "path" },
-    "r": { "tile": "rock" },
-    "s": { "tile": "sign", "dialog": "dustway.sign_west" }
+    "T": {
+      "tile": "tree"
+    },
+    ".": {
+      "tile": "grass"
+    },
+    ",": {
+      "tile": "meadow"
+    },
+    "t": {
+      "tile": "tall_grass",
+      "encounter": true
+    },
+    "p": {
+      "tile": "path"
+    },
+    "r": {
+      "tile": "rock"
+    },
+    "s": {
+      "tile": "sign",
+      "dialog": "dustway.sign_west"
+    }
   },
   "rows": [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
@@ -24,23 +41,67 @@
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ],
   "npcs": [
-    { "id": "rival_sable", "x": 18, "y": 4, "sprite": "sable", "facing": "down", "dialog": "dustway.rival_sable" }
+    {
+      "id": "rival_sable",
+      "x": 18,
+      "y": 4,
+      "sprite": "sable",
+      "facing": "down",
+      "dialog": "dustway.rival_sable"
+    }
   ],
   "exits": [
-    { "x": 0, "y": 5, "to": "kindra_town", "spawn": "from_dustway" },
-    { "x": 35, "y": 5, "to": "scald_gate", "spawn": "west" }
+    {
+      "x": 0,
+      "y": 5,
+      "to": "kindra_town",
+      "spawn": "from_dustway"
+    },
+    {
+      "x": 35,
+      "y": 5,
+      "to": "scald_gate",
+      "spawn": "west"
+    }
   ],
   "spawns": {
-    "default": { "x": 1, "y": 5, "facing": "right" },
-    "west": { "x": 1, "y": 5, "facing": "right" },
-    "from_scald": { "x": 34, "y": 5, "facing": "left" }
+    "default": {
+      "x": 1,
+      "y": 5,
+      "facing": "right"
+    },
+    "west": {
+      "x": 1,
+      "y": 5,
+      "facing": "right"
+    },
+    "from_scald": {
+      "x": 34,
+      "y": 5,
+      "facing": "left"
+    }
   },
   "encounters": {
     "rate": 0.14,
     "table": [
-      { "drake": "flick", "min": 2, "max": 4, "weight": 40 },
-      { "drake": "tuft", "min": 2, "max": 4, "weight": 35 },
-      { "drake": "gulp", "min": 2, "max": 5, "weight": 25 }
+      {
+        "drake": "flick",
+        "min": 2,
+        "max": 4,
+        "weight": 40
+      },
+      {
+        "drake": "tuft",
+        "min": 2,
+        "max": 4,
+        "weight": 35
+      },
+      {
+        "drake": "gulp",
+        "min": 2,
+        "max": 5,
+        "weight": 25
+      }
     ]
   }
 }

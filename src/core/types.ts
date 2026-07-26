@@ -62,6 +62,8 @@ export interface LegendEntry {
 export interface MapDef {
   id: string;
   name: string;
+  /** Looping theme from src/audio/tracks.ts; defaults to 'town'. */
+  music?: string;
   legend: Record<string, LegendEntry>;
   rows: string[];
   npcs: NpcDef[];
