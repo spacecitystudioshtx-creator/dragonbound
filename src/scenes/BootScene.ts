@@ -70,8 +70,12 @@ export class BootScene extends Phaser.Scene {
       }
     }
 
-    // Make sure the pixel font is ready before any scene renders text.
-    document.fonts.load('8px "Press Start 2P"').then(() => {
+    // Make sure the pixel font is ready before any scene renders text —
+    // but never hang on it (slow networks / backgrounded tabs).
+    Promise.race([
+      document.fonts.load('8px "Press Start 2P"').catch(() => undefined),
+      new Promise((res) => setTimeout(res, 1500)),
+    ]).then(() => {
       const params = new URLSearchParams(window.location.search);
       if (params.has('new')) {
         // QC shortcut: /?new wipes the save for a guaranteed fresh start.

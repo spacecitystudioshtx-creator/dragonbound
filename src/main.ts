@@ -27,6 +27,9 @@ const game = new Phaser.Game({
   scene: [BootScene, TitleScene, WorldScene, BattleScene, DebugScene],
 });
 
+// Touch D-pad/buttons for phones (drives the same key events as a keyboard).
+import('./touch').then((m) => m.initTouchControls());
+
 // Audio needs a real user gesture: init on first key/pointer, M toggles mute.
 import('./audio/sound').then(({ Sound }) => {
   (window as any).__sound = Sound;
