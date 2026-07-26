@@ -73,6 +73,14 @@ export class BootScene extends Phaser.Scene {
     // Make sure the pixel font is ready before any scene renders text.
     document.fonts.load('8px "Press Start 2P"').then(() => {
       const params = new URLSearchParams(window.location.search);
+      if (params.has('new')) {
+        // QC shortcut: /?new wipes the save for a guaranteed fresh start.
+        import('../core/state').then(({ GameState }) => {
+          GameState.clearSave();
+          this.scene.start('Title');
+        });
+        return;
+      }
       if (params.has('debug')) {
         this.scene.start('Debug', { sheet: params.get('debug') || 'ground' });
       } else {

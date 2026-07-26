@@ -8,8 +8,9 @@ class GameStateImpl {
   flags = new Set<string>();
   runestones = 0;
   map = 'kindra_town';
-  x = 10;
-  y = 8;
+  // Matches kindra_town's "default" spawn (the town plaza).
+  x = 14;
+  y = 10;
   facing = 'down';
 
   get activeDrake(): DrakeInstance | null {
@@ -49,6 +50,10 @@ class GameStateImpl {
     return localStorage.getItem(SAVE_KEY) !== null;
   }
 
+  clearSave(): void {
+    localStorage.removeItem(SAVE_KEY);
+  }
+
   load(): boolean {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
@@ -72,8 +77,8 @@ class GameStateImpl {
     this.flags = new Set();
     this.runestones = 0;
     this.map = 'kindra_town';
-    this.x = 10;
-    this.y = 8;
+    this.x = 14;
+    this.y = 10;
     this.facing = 'down';
   }
 }

@@ -47,6 +47,7 @@ export class WorldScene extends Phaser.Scene {
   private uiLocked = false;
   private suppressBump = false;
   private lastBumpSfx = 0;
+  private wipeRects: Phaser.GameObjects.Rectangle[] = [];
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private mapNameText?: Phaser.GameObjects.Container;
 
@@ -484,6 +485,7 @@ export class WorldScene extends Phaser.Scene {
           const rect = this.add
             .rectangle(c * tw + tw / 2, r * th + th / 2, tw + 1, th + 1, 0x000000)
             .setScale(0).setScrollFactor(0).setDepth(3000);
+          this.wipeRects.push(rect);
           this.tweens.add({
             targets: rect,
             scale: 1,
@@ -509,6 +511,10 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private async onBattleReturn(data: any): Promise<void> {
+    // The battle-intro wipe tiles live in THIS scene — clear them or the
+    // world wakes up behind a black screen.
+    this.wipeRects.forEach((r) => r.destroy());
+    this.wipeRects = [];
     this.uiLocked = false;
     this.suppressBump = true;
     this.setPlayerIdle(GameState.facing);
